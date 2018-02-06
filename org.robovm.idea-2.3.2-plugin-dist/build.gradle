@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('org.robovm.idea-2.3.2-plugin-dist.jar'))
