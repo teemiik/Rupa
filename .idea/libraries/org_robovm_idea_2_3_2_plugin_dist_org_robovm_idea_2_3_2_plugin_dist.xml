@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="org.robovm.idea-2.3.2-plugin-dist.org.robovm.idea-2.3.2-plugin-dist">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/org.robovm.idea-2.3.2-plugin-dist/org.robovm.idea-2.3.2-plugin-dist.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,1 @@
+include 'desktop', 'android', 'ios', 'core', ':org.robovm.idea-2.3.2-plugin-dist'

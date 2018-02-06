@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/net.java.jinput/jinput/2.0.5/39c7796b469a600f72380316f6b1f11db6c2c7c4/jinput-2.0.5.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="39c7796b469a600f72380316f6b1f11db6c2c7c4">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/14.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.gdx/gdx-box2d/1.9.6/c249ef4060a4fada952f278455c8f7b9cba3c18a/gdx-box2d-1.9.6.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="c249ef4060a4fada952f278455c8f7b9cba3c18a">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/3.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/org.jcraft/jorbis/0.0.17/8872d22b293e8f5d7d56ff92be966e6dc28ebdc6/jorbis-0.0.17.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="8872d22b293e8f5d7d56ff92be966e6dc28ebdc6">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/10.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.gdx/gdx-freetype/1.9.6/69187cc3c8062f191df435b43671b0e5ffcbf353/gdx-freetype-1.9.6.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="69187cc3c8062f191df435b43671b0e5ffcbf353">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/4.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.gdx/gdx-backend-android/1.9.6/57c2831c870743712b808384187ea856e541878f/gdx-backend-android-1.9.6.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="57c2831c870743712b808384187ea856e541878f">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/1.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/core/build/libs/core-1.0.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="bfc00e46aaeb1dba52ffc59062c544f515331588">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/19.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.jlayer/jlayer/1.0.1-gdx/7cca83cec5c1b2f011362f4d85aabd71a73b049d/jlayer-1.0.1-gdx.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="7cca83cec5c1b2f011362f4d85aabd71a73b049d">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/9.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.gdx/gdx/1.9.6/47d1e9b890e364ec28f128e9bb3b9a12a94c164/gdx-1.9.6.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="047d1e9b890e364ec28f128e9bb3b9a12a94c164">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/6.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/org.lwjgl.lwjgl/lwjgl_util/2.9.2/4b9e37300a87799856e0bd15ed81663cdb6b0947/lwjgl_util-2.9.2.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="4b9e37300a87799856e0bd15ed81663cdb6b0947">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/7.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/org.lwjgl.lwjgl/lwjgl/2.9.2/a9d80fe5935c7a9149f6584d9777cfd471f65489/lwjgl-2.9.2.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="a9d80fe5935c7a9149f6584d9777cfd471f65489">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/8.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/net.java.jutils/jutils/1.0.0/e12fe1fda814bd348c1579329c86943d2cd3c6a6/jutils-1.0.0.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="e12fe1fda814bd348c1579329c86943d2cd3c6a6">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/15.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.gdx/gdx-backend-lwjgl/1.9.6/ee7c23636ee4a942d329579daecc3ec5e517fe4c/gdx-backend-lwjgl-1.9.6.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="ee7c23636ee4a942d329579daecc3ec5e517fe4c">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/5.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="/Users/artem.bolgov/.gradle/caches/modules-2/files-2.1/com.badlogicgames.box2dlights/box2dlights/1.4/3d77ad5b4164fb32fc67e2446e35911bb0aaf0bd/box2dlights-1.4.jar"
+        jumboMode="false"
+        min-sdk-version="9"
+        optimize="true"
+        revision="26.0.2"
+        sha1="3d77ad5b4164fb32fc67e2446e35911bb0aaf0bd">
+        <dex dex="/Users/artem.bolgov/DevelopersAndroid/CirclesHoles-master(new)/android/build/intermediates/transforms/preDex/release/2.jar" />
+    </item>
+
+</items>
