@@ -9,7 +9,7 @@ buildscript {
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
   }
   dependencies {
-    classpath "com.android.tools.build:gradle:8.1.4"
+    classpath "com.android.tools.build:gradle:8.8.0"
     classpath "org.docstr:gwt-gradle-plugin:$gwtPluginVersion"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
@@ -58,7 +58,7 @@ configure(subprojects - project(':android')) {
 }
 
 subprojects {
-  version = '1.0.5'
+  version = '1.0.6'
   ext.appName = 'Rupa'
   repositories {
     mavenCentral()
