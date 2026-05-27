@@ -2,12 +2,15 @@ package com.circlesandholes.game.lwjgl3;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.circlesandholes.game.Debug;
 import com.circlesandholes.game.Intro;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
+        // Dev affordances on when launched via `gradlew run` (sets -Ddebug=true); off in packaged builds.
+        Debug.enabled = Boolean.getBoolean("debug");
         createApplication();
     }
 

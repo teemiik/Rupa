@@ -6,285 +6,288 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-
-import com.circlesandholes.game.Levels.Level1;
-import com.circlesandholes.game.Levels.Level2;
-import com.circlesandholes.game.Levels.Level3;
-import com.circlesandholes.game.Levels.Level4;
-import com.circlesandholes.game.Levels.Level5;
-import com.circlesandholes.game.Levels.Level6;
-
-import static com.circlesandholes.game.Intro.background;
-import static com.circlesandholes.game.Intro.background_2;
 import static com.circlesandholes.game.Intro.box_din;
 import static com.circlesandholes.game.Intro.camera;
 import static com.circlesandholes.game.Intro.faild;
-import static com.circlesandholes.game.Intro.generator;
 import static com.circlesandholes.game.Intro.glyph;
-import static com.circlesandholes.game.Intro.glyph_result;
-import static com.circlesandholes.game.Intro.glyph_var1;
-import static com.circlesandholes.game.Intro.glyph_var2;
 import static com.circlesandholes.game.Intro.h_world;
-import static com.circlesandholes.game.Intro.lang;
 import static com.circlesandholes.game.Intro.size_text;
 import static com.circlesandholes.game.Intro.size_text_result;
-import static com.circlesandholes.game.Intro.text;
 import static com.circlesandholes.game.Intro.text_total;
 import static com.circlesandholes.game.Intro.the_end;
 import static com.circlesandholes.game.Intro.timer_dynamic_body;
 import static com.circlesandholes.game.Intro.w_world;
 import static com.circlesandholes.game.Intro.win;
 
+/**
+ * Win / lose / "the end" result screen. Uses the same text-option style as the
+ * pause menu (centred labels with a shadow on a card panel), with manual tap
+ * hit-testing — no scene2d buttons. Records the best time and shows a win burst.
+ */
 public class TryContinueEnd extends Game implements Screen {
-	final Intro intro;
-	final int level;
 
-	private SpriteBatch batch;
+    final Intro intro;
+    final int level;
 
-	private Texture try_image, continue_image;
+    private final SpriteBatch batch;
+    private final BitmapFont titleFont;   // headings
+    private final BitmapFont optionFont;   // tappable options
+    private final BitmapFont infoFont;     // time / record
 
-	private BitmapFont font_counter, font_result, font_var1, font_var2;
+    private final Texture blackTex;
+    private final Texture particleTex;
+    private final Texture panelTex;
+    private float panelX, panelY, panelW, panelH;
+    private float particleSize;
+    private float fade = 0.7f;
+    private boolean one_render = true;
+    private String recordStr = "";
 
-	private ImageButton btn_try, btn_continue;
+    private final Vector3 touchPos = new Vector3();
 
-	private Stage stage;
+    // Dynamic Y positions computed from font line heights
+    private float loseTitleY, loseRetryY, loseLevelsY;
+    private float winTitleY, winTimeY, winRecordY, winNextY, winRetryY, winLevelsY;
+    private float endContinueY;
 
-	private boolean one_render = true;
+    private static final int BURST = 26;
+    private final float[] px = new float[BURST];
+    private final float[] py = new float[BURST];
+    private final float[] vx = new float[BURST];
+    private final float[] vy = new float[BURST];
+    private final float[] life = new float[BURST];
 
-	public TryContinueEnd(final Intro intro, final int level) {
-		this.intro = intro;
-		this.level = level;
+    public TryContinueEnd(final Intro intro, final int level) {
+        this.intro = intro;
+        this.level = level;
 
-		batch = new SpriteBatch();
+        batch = new SpriteBatch();
 
-		FreeTypeFontGenerator.FreeTypeFontParameter parametr_fall = new FreeTypeFontGenerator.FreeTypeFontParameter();
-		parametr_fall.size = size_text;
-		parametr_fall.characters = lang;
-		parametr_fall.color = Color.WHITE;
-		font_counter = generator.generateFont(parametr_fall);
-		font_var1 = generator.generateFont(parametr_fall);
-		font_var2 = generator.generateFont(parametr_fall);
+        blackTex = ProceduralAssets.solid(Color.BLACK);
+        particleSize = w_world * 0.018f;
+        particleTex = ProceduralAssets.circle(Math.max(2, Math.round(particleSize)), Color.WHITE);
+        panelW = w_world * 0.84f;
+        panelH = h_world * 0.84f;
+        panelX = (w_world - panelW) / 2f;
+        panelY = (h_world - panelH) / 2f;
+        panelTex = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelH),
+                w_world * 0.06f, new Color(0.16f, 0.16f, 0.22f, 0.5f));
 
-		FreeTypeFontGenerator.FreeTypeFontParameter parametr_win = new FreeTypeFontGenerator.FreeTypeFontParameter();
-		parametr_win.size = size_text_result;
-		parametr_win.characters = lang;
-		parametr_win.color = Color.WHITE;
-		font_result = generator.generateFont(parametr_win);
+        titleFont = Intro.makeFont(Math.round(size_text_result * 1.35f));
+        optionFont = Intro.makeFont(size_text_result);
+        infoFont = Intro.makeFont(size_text);
 
-		//System.out.println(w_world);
+        computeYPositions();
 
-		stage = new Stage();
-		Gdx.input.setInputProcessor(stage);
+        text_total = "Уровень пройден за ";
+    }
 
-		try_image = new Texture("Menu/try.png");
-		btn_try = new ImageButton(new TextureRegionDrawable(new TextureRegion(try_image)));
-		btn_try.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				if (!faild || win) {
-					try {
-						timer_dynamic_body.cancel();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					Intro.createdBoard();
+    private void computeYPositions() {
+        float panelCenterY = panelY + panelH / 2f;
+        float lineHeightTitle = titleFont.getLineHeight();
+        float lineHeightOption = optionFont.getLineHeight();
+        float lineHeightInfo = infoFont.getLineHeight();
+        
+        // Lose screen positions
+        loseTitleY = panelCenterY + lineHeightTitle * 1.5f;
+        loseRetryY = panelCenterY - lineHeightOption * 0.5f;
+        loseLevelsY = panelCenterY - lineHeightOption * 2.5f;
+        
+        // Win screen positions  
+        winTitleY = panelCenterY + lineHeightTitle * 3f;
+        winTimeY = panelCenterY + lineHeightInfo * 1.5f;
+        winRecordY = panelCenterY + lineHeightInfo * 0.5f;
+        winNextY = panelCenterY - lineHeightOption * 1f;
+        winRetryY = panelCenterY - lineHeightOption * 2.5f;
+        winLevelsY = panelCenterY - lineHeightOption * 4f;
+        
+        // End screen position
+        endContinueY = panelCenterY;
+    }
 
-					switch (level) {
-						case 1: intro.setScreen(new Level1(intro));
-							break;
-						case 2: intro.setScreen(new Level2(intro));
-							break;
-						case 3: intro.setScreen(new Level3(intro));
-							break;
-						case 4: intro.setScreen(new Level4(intro));
-							break;
-						case 5: intro.setScreen(new Level5(intro));
-							break;
-						case 6: intro.setScreen(new Level6(intro));
-							break;
-					}
-					faild = true;
-					win = false;
-					stage.dispose();
-					box_din = 0;
-				}
-				super.clicked(event, x, y);
-			}
-		});
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		continue_image = new Texture("Menu/continue.png");
+        if (!faild) { // lost
+            batch.begin();
+            batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.draw(panelTex, panelX, panelY, panelW, panelH);
+            drawCentered(titleFont, "Не получилось", loseTitleY);
+            drawCentered(optionFont, "Заново", loseRetryY);
+            drawCentered(optionFont, "Уровни", loseLevelsY);
+            batch.end();
 
-		btn_continue = new ImageButton(new TextureRegionDrawable(new TextureRegion(continue_image)));
-		btn_continue.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				if (win) {
-					try {
-						timer_dynamic_body.cancel();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					Intro.createdBoard();
+            if (tappedAt(loseRetryY)) {
+                doRetry();
+            } else if (tappedAt(loseLevelsY)) {
+                doLevels();
+            }
 
-					int level_up = level + 1;
-					switch (level_up) {
-						case 2: intro.setScreen(new Level2(intro));
-							break;
-						case 3: intro.setScreen(new Level3(intro));
-							break;
-						case 4: intro.setScreen(new Level4(intro));
-							break;
-						case 5: intro.setScreen(new Level5(intro));
-							break;
-						case 6: intro.setScreen(new Level6(intro));
-							break;
-						case 7: the_end = true;
-							break;
-					}
+        } else if (win) {
+            if (one_render) {
+                text_total = "Уровень пройден за " + Progress.formatTime(Intro.finishSeconds);
+                Progress.recordTime(level, Intro.finishSeconds);
+                recordStr = "Рекорд " + Progress.formatTime(Progress.bestTime(level));
+                spawnBurst();
+                one_render = false;
+            }
 
-					stage.dispose();
-					win = false;
-					box_din = 0;
-				}
-				super.clicked(event, x, y);
-			}
-		});
+            batch.begin();
+            batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.draw(panelTex, panelX, panelY, panelW, panelH);
+            drawCentered(titleFont, "Победа!", winTitleY);
+            drawCentered(infoFont, text_total, winTimeY);
+            drawCentered(infoFont, recordStr, winRecordY);
+            drawCentered(optionFont, "Следующий уровень", winNextY);
+            drawCentered(optionFont, "Заново", winRetryY);
+            drawCentered(optionFont, "Уровни", winLevelsY);
+            updateAndDrawBurst(delta);
+            batch.end();
 
-		text_total = "Вы успели пройти уровень за ";
-	}
+            if (tappedAt(winNextY)) {
+                doContinue();
+            } else if (tappedAt(winRetryY)) {
+                doRetry();
+            } else if (tappedAt(winLevelsY)) {
+                doLevels();
+            }
 
-	@Override
-	public void create() {
+        } else if (the_end) {
+            batch.begin();
+            batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.draw(panelTex, panelX, panelY, panelW, panelH);
+            drawCentered(optionFont, "Продолжение следует...", endContinueY);
+            batch.end();
+        }
 
-	}
+        drawFade(delta);
+    }
 
-	@Override
-	public void render(float delta) {
-		Gdx.gl.glClearColor(0, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    private void doRetry() {
+        intro.goToLevel(level);
+    }
 
-		if (!faild) {
+    private void doContinue() {
+        int levelUp = level + 1;
+        if (levelUp <= LevelLoader.count()) {
+            intro.goToLevel(levelUp);
+        } else {
+            cancelDynamicTimer();
+            box_din = 0;
+            win = false;
+            the_end = true;
+        }
+    }
 
-			batch.begin();
-			if (level < 6)
-				batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-			else
-				batch.draw(background_2, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    private void doLevels() {
+        // Keep this result screen alive so Back from the picker returns here.
+        intro.setScreen(new LevelSelectScreen(intro, this));
+    }
 
-			btn_try.setX((float) (w_world / 2 - try_image.getTextureData().getWidth() / 2));
-			btn_try.setY((float) (h_world / 2 - try_image.getTextureData().getHeight() / 2));
+    /** True if a tap landed this frame within the option band centred on baseline y. */
+    private boolean tappedAt(float y) {
+        if (!Gdx.input.justTouched()) return false;
+        touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+        camera.unproject(touchPos);
+        float bandW = w_world * 0.8f;
+        float bandH = optionFont.getLineHeight() * 1.6f;
+        float cy = y - optionFont.getLineHeight() / 2f;
+        return touchPos.x >= w_world / 2 - bandW / 2 && touchPos.x <= w_world / 2 + bandW / 2
+                && touchPos.y >= cy - bandH / 2 && touchPos.y <= cy + bandH / 2;
+    }
 
-			//btn_try.setOrigin(w_world / 2 - try_image.getTextureData().getWidth() / 2, h_world / 2 - try_image.getTextureData().getHeight() / 2);
+    private void drawCentered(BitmapFont font, String s, float y) {
+        glyph.setText(font, s);
+        float x = w_world / 2 - glyph.width / 2;
+        float o = Math.max(1f, w_world * 0.004f);
+        font.setColor(0f, 0f, 0f, 0.5f);
+        font.draw(batch, s, x + o, y - o);
+        font.setColor(Color.WHITE);
+        font.draw(batch, s, x, y);
+    }
 
-			stage.addActor(btn_try);
+    private void cancelDynamicTimer() {
+        if (timer_dynamic_body != null) {
+            try {
+                timer_dynamic_body.cancel();
+            } catch (Exception ignored) {
+            }
+            timer_dynamic_body = null;
+        }
+    }
 
-			String res_str = "Это фиаско!";
-			String ext_str = "Попробуйте еще раз)";
-			glyph_result.setText(font_result, res_str);
-			glyph.setText(font_counter, ext_str);
+    private void spawnBurst() {
+        float cx = w_world / 2f, cy = h_world * 0.62f;
+        for (int i = 0; i < BURST; i++) {
+            float ang = MathUtils.random(0f, MathUtils.PI2);
+            float spd = MathUtils.random(w_world * 0.25f, w_world * 0.7f);
+            px[i] = cx;
+            py[i] = cy;
+            vx[i] = MathUtils.cos(ang) * spd;
+            vy[i] = MathUtils.sin(ang) * spd + h_world * 0.2f;
+            life[i] = MathUtils.random(0.9f, 1.5f);
+        }
+    }
 
-			font_result.draw(batch, res_str, w_world / 2 - glyph_result.width / 2, (float) (h_world / 2 + try_image.getTextureData().getHeight() * 1.3));
-			font_counter.draw(batch, ext_str, w_world / 2 - glyph.width / 2, (float) (h_world / 2 + try_image.getTextureData().getHeight() * 0.9));
+    private void updateAndDrawBurst(float delta) {
+        float g = h_world * 0.9f;
+        for (int i = 0; i < BURST; i++) {
+            if (life[i] <= 0f) continue;
+            life[i] -= delta;
+            vy[i] -= g * delta;
+            px[i] += vx[i] * delta;
+            py[i] += vy[i] * delta;
+            float a = life[i] > 1f ? 1f : (life[i] < 0f ? 0f : life[i]);
+            batch.setColor(1f, 1f, 1f, a);
+            batch.draw(particleTex, px[i] - particleSize / 2f, py[i] - particleSize / 2f, particleSize, particleSize);
+        }
+        batch.setColor(Color.WHITE);
+    }
 
-			batch.end();
+    private void drawFade(float delta) {
+        if (fade <= 0f) return;
+        batch.begin();
+        batch.setColor(0f, 0f, 0f, fade);
+        batch.draw(blackTex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.setColor(Color.WHITE);
+        batch.end();
+        fade -= delta / 0.25f;
+        if (fade < 0f) fade = 0f;
+    }
 
-			stage.draw();
+    @Override
+    public void show() {
+        Gdx.input.setInputProcessor(null);
+    }
 
-		} else if (win) {
+    @Override
+    public void resize(int width, int height) {
+        camera.setToOrtho(false, width, height);
+    }
 
-			batch.begin();
+    @Override
+    public void dispose() {
+        batch.dispose();
+        titleFont.dispose();
+        optionFont.dispose();
+        infoFont.dispose();
+        blackTex.dispose();
+        particleTex.dispose();
+        panelTex.dispose();
+    }
 
-			if (level < 6)
-				batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-			else
-				batch.draw(background_2, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    @Override
+    public void create() {
+    }
 
-			btn_continue.setX((float) (w_world / 2 - continue_image.getTextureData().getWidth() / 2));
-			btn_continue.setY((float) (h_world * 0.55 - continue_image.getTextureData().getHeight() / 2));
-
-			btn_try.setX((float) (w_world / 2 - try_image.getTextureData().getWidth() / 2));
-			btn_try.setY((float) (h_world * 0.2 - try_image.getTextureData().getHeight() / 2));
-
-			stage.addActor(btn_continue);
-			stage.addActor(btn_try);
-
-			if (one_render) {
-				text_total = text_total + text;
-				glyph.setText(font_counter, text_total);
-				one_render = false;
-			}
-
-			String res_str = "Победа!";
-			String var1_str = "Перейдете на следующий уровень?";
-			String var2_str = "или попробуйте еще раз...";
-
-			glyph_result.setText(font_result, res_str);
-			glyph_var1.setText(font_var1, var1_str);
-			glyph_var2.setText(font_var2, var2_str);
-
-			font_result.draw(batch, res_str, w_world / 2 - glyph_result.width / 2, (float) (h_world * 0.55 + continue_image.getTextureData().getHeight() * 1.3));
-
-			font_var1.draw(batch, var1_str, w_world / 2 - glyph_var1.width / 2, (float) (h_world * 0.55 + continue_image.getTextureData().getHeight() / 1.2));
-
-			font_counter.draw(batch, text_total, w_world / 2 - glyph.width / 2, (float) (h_world * 0.55 - continue_image.getTextureData().getHeight() / 1.3));
-
-			font_var2.draw(batch, var2_str, w_world / 2 - glyph_var2.width / 2, (float) (h_world * 0.2 + try_image.getTextureData().getHeight()));
-
-
-			batch.end();
-
-			stage.draw();
-
-		} else if (the_end) {
-
-			batch.begin();
-			if (level < 6)
-				batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-			else
-				batch.draw(background_2, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-			String res_str = "Продолжение следует...";
-
-			glyph_result.setText(font_result, res_str);
-
-			font_result.draw(batch, res_str, w_world / 2 - glyph_result.width / 2, h_world / 2 - glyph_result.height / 2);
-
-			batch.end();
-
-		}
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		camera.setToOrtho(false, width, height);
-	}
-
-
-	@Override
-	public void dispose() {
-		batch.dispose();
-	}
-
-
-	@Override
-	public void show() {
-
-	}
-
-	@Override
-	public void hide() {
-
-	}
+    @Override
+    public void hide() {
+    }
 }

@@ -39,6 +39,9 @@ run {
   workingDir = rootProject.file('assets').path
   setIgnoreExitValue(true)
 
+  // Marks this as a dev run so Debug.enabled turns on (stays off in the packaged jar).
+  systemProperty 'debug', 'true'
+
   if (os.contains('mac')) jvmArgs += "-XstartOnFirstThread"
 }
 
