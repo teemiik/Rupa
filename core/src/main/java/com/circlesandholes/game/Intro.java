@@ -2,26 +2,23 @@ package com.circlesandholes.game;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.circlesandholes.game.Levels.Level1;
-import com.circlesandholes.game.Levels.Level2;
-import com.circlesandholes.game.Levels.Level3;
-import com.circlesandholes.game.Levels.Level4;
-import com.circlesandholes.game.Levels.Level5;
-import com.circlesandholes.game.Levels.Level6;
-
+import com.badlogic.gdx.utils.Scaling;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,28 +30,24 @@ import java.util.TimerTask;
 
     public SpriteBatch batch;
 
-    private Texture image_button_down;
-    private Texture image_button_menu_down;
-
-    private Texture image_level1;
-    private Texture image_level2;
-    private Texture image_level3;
-    private Texture image_level4;
-    private Texture image_level5;
-    private Texture image_level6;
-
     private Texture background_image;
     private Texture background_2_image;
 
-    private Stage stage, stage_lvl;
-
-    private boolean menu = false;
+    private BitmapFont titleFont;
+    private BitmapFont optionFont;
+    private GlyphLayout menuGlyph;
+    private Texture playTex;
+    private float playX, playY, playSize;
 
     public static String lang = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789][_!$%#@|\\\\/?^-+=()*&.:;,{}\\\"´`'<>";
 
     public static float w_world;
     public static float h_world;
     public static float height_board;
+
+    /** UI icon scale: PNG buttons are authored for a ~1080px-wide screen, so size them relative to that. */
+    public static float uiScale = 1f;
+    private static final float UI_REFERENCE_WIDTH = 1080f;
     private static float withdt_board;
 
     public static final int VELOCITY_ITERATIONS = 6;
@@ -74,6 +67,10 @@ import java.util.TimerTask;
     public static Sprite circle;
     public static Sprite background;
     public static Sprite background_2;
+
+    /** Background of the level currently being played; regenerated per level. */
+    public static Sprite currentBackground;
+    private static Texture currentBackgroundTexture;
     public static Sprite training_left;
     public static Sprite training_right;
 
@@ -101,6 +98,13 @@ import java.util.TimerTask;
     public static int box_din = 0;
     private static int speed_hole;
 
+    /** Seconds taken to finish the current level (snapshot on win, for the record). */
+    public static int finishSeconds = 0;
+    /** When true, the game timers stop advancing (used by the in-level pause overlay). */
+    public static boolean paused = false;
+    /** When true, the board ignores the in-progress touch until released (so a menu tap doesn't tilt). */
+    public static boolean consumeTouch = false;
+
     private static Timer timer;
     private static Timer timer_gest;
     public static Timer timer_dynamic_body = null;
@@ -112,31 +116,103 @@ import java.util.TimerTask;
 
     public static FreeTypeFontGenerator generator;
 
+    // --- Procedural theme palette (replaces the shipped PNG art) ---
+    private static final Color BALL_COLOR = new Color(0.80f, 0.80f, 0.83f, 1f);
+    private static final Color HOLE_COLOR = new Color(0.10f, 0.10f, 0.12f, 1f);
+    private static final Color BOARD_COLOR = new Color(0.62f, 0.30f, 0.28f, 1f);
+    private static final Color BOARD2_COLOR = new Color(0.34f, 0.40f, 0.46f, 1f);
+    private static final Color BARRIER_COLOR = new Color(0.12f, 0.12f, 0.13f, 1f);
+    private static final Color BG_WARM_TOP = new Color(0.80f, 0.76f, 0.68f, 1f);
+    private static final Color BG_WARM_BOTTOM = new Color(0.52f, 0.13f, 0.18f, 1f);
+    private static final Color BG_WARM_GLOW = new Color(0.96f, 0.90f, 0.78f, 1f);
+    private static final Color BG_COOL_TOP = new Color(0.62f, 0.72f, 0.80f, 1f);
+    private static final Color BG_COOL_BOTTOM = new Color(0.06f, 0.10f, 0.16f, 1f);
+    private static final Color BG_COOL_GLOW = new Color(0.82f, 0.92f, 1.0f, 1f);
+
     @Override
     public void create() {
         generalData(new SpriteBatch());
     }
 
-    private void getScreen(int level) {
-        switch (level) {
-            case 1:
-                setScreen(new Level1(this));
-                break;
-            case 2:
-                setScreen(new Level2(this));
-                break;
-            case 3:
-                setScreen(new Level3(this));
-                break;
-            case 4:
-                setScreen(new Level4(this));
-                break;
-            case 5:
-                setScreen(new Level5(this));
-                break;
-            case 6:
-                setScreen(new Level6(this));
-                break;
+    /**
+     * Single entry point for starting a level: resets the shared per-level state
+     * (oscillation timer, counters, win/fail flags) and rebuilds the board, then
+     * shows the data-driven screen. Called from the menu, the level picker and
+     * the result screen.
+     */
+    public void goToLevel(int level) {
+        if (timer_dynamic_body != null) {
+            try {
+                timer_dynamic_body.cancel();
+            } catch (Exception ignored) {
+            }
+            timer_dynamic_body = null;
+        }
+        box_din = 0;
+        box_hole_din_sign = true;
+        faild = true;
+        win = false;
+        paused = false;
+        consumeTouch = true;
+        buildLevelTheme(level);
+        createdBoard();
+        setScreen(new LevelScreen(this, level, LevelLoader.load(level)));
+    }
+
+    /**
+     * Picks a per-level colour theme from the level number: a unique-hue gradient
+     * background plus a board in the same hue (lighter / less saturated so it
+     * reads against the dark bottom of the gradient instead of clashing).
+     */
+    private static void buildLevelTheme(int level) {
+        float hue = ((level - 1) * 47f) % 360f;
+
+        Color top = new Color();
+        top.fromHsv(hue, 0.30f, 0.82f);
+        top.a = 1f;
+        Color bottom = new Color();
+        bottom.fromHsv(hue, 0.65f, 0.38f);
+        bottom.a = 1f;
+        Color glow = new Color();
+        glow.fromHsv(hue, 0.18f, 0.95f);
+        glow.a = 1f;
+        if (currentBackgroundTexture != null) {
+            currentBackgroundTexture.dispose();
+        }
+        currentBackgroundTexture = ProceduralAssets.background(top, bottom, glow);
+        currentBackground = new Sprite(currentBackgroundTexture);
+
+        // Board with a vertical bevel (lighter top, darker bottom) in the level's hue.
+        Color boardLight = new Color();
+        boardLight.fromHsv(hue, 0.40f, 0.80f);
+        boardLight.a = 1f;
+        Color boardDark = new Color();
+        boardDark.fromHsv(hue, 0.58f, 0.52f);
+        boardDark.a = 1f;
+        if (board_image != null) {
+            board_image.dispose();
+        }
+        if (board_2_image != null) {
+            board_2_image.dispose();
+        }
+        int bw = Math.max(2, Math.round(withdt_board));
+        int bh = Math.max(2, Math.round(height_board));
+        board_image = ProceduralAssets.roundRectGradient(bw, bh, bh / 2f, boardLight, boardDark);
+        board_2_image = ProceduralAssets.roundRectGradient(bw, bh, bh / 2f, boardLight, boardDark);
+    }
+
+    /** Returns to the start screen (play / level-select buttons). */
+    public void showMenu() {
+        paused = false;
+        setScreen(null);
+        Gdx.input.setInputProcessor(null);
+    }
+
+    /** Short haptic pulse on mobile; harmless no-op on platforms without vibration. */
+    public static void vibrate(int ms) {
+        try {
+            Gdx.input.vibrate(ms);
+        } catch (Throwable ignored) {
         }
     }
 
@@ -145,17 +221,49 @@ import java.util.TimerTask;
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        batch.begin();
-        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        batch.end();
+        // The start menu is drawn here only while no other screen is active;
+        // levels, the picker and result screens are real Screens drawn by super.render().
+        if (getScreen() == null) {
+            batch.begin();
+            batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            drawMenuText(titleFont, "Rupa", h_world * 0.82f);
+            batch.draw(playTex, playX, playY, playSize, playSize);
+            drawMenuText(optionFont, "Уровни", h_world * 0.34f);
+            drawMenuText(optionFont, "Выход", h_world * 0.23f);
+            batch.end();
 
-        if (menu) {
-            stage_lvl.draw();
-        } else {
-            stage.draw();
+            if (Gdx.input.justTouched()) {
+                float tx = Gdx.input.getX();
+                float ty = h_world - Gdx.input.getY();
+                if (tx >= playX && tx <= playX + playSize && ty >= playY && ty <= playY + playSize) {
+                    goToLevel(1);
+                } else if (menuTap(tx, ty, h_world * 0.34f)) {
+                    setScreen(new LevelSelectScreen(this, null));
+                } else if (menuTap(tx, ty, h_world * 0.23f)) {
+                    Gdx.app.exit();
+                }
+            }
         }
 
         super.render();
+    }
+
+    private void drawMenuText(BitmapFont font, String s, float y) {
+        menuGlyph.setText(font, s);
+        float x = w_world / 2 - menuGlyph.width / 2;
+        float o = Math.max(1f, w_world * 0.004f);
+        font.setColor(0f, 0f, 0f, 0.5f);
+        font.draw(batch, s, x + o, y - o);
+        font.setColor(Color.WHITE);
+        font.draw(batch, s, x, y);
+    }
+
+    private boolean menuTap(float tx, float ty, float y) {
+        float bandW = w_world * 0.8f;
+        float bandH = optionFont.getLineHeight() * 1.6f;
+        float cy = y - optionFont.getLineHeight() / 2f;
+        return tx >= w_world / 2 - bandW / 2 && tx <= w_world / 2 + bandW / 2
+                && ty >= cy - bandH / 2 && ty <= cy + bandH / 2;
     }
 
     private void generalData(SpriteBatch batch) {
@@ -166,11 +274,14 @@ import java.util.TimerTask;
         w_world = Gdx.graphics.getWidth();
         h_world = Gdx.graphics.getHeight();
 
-        background_image = new Texture("background.jpg");
-        background_2_image = new Texture("background_2.jpg");
+        uiScale = w_world / UI_REFERENCE_WIDTH;
+
+        background_image = ProceduralAssets.background(BG_WARM_TOP, BG_WARM_BOTTOM, BG_WARM_GLOW);
+        background_2_image = ProceduralAssets.background(BG_COOL_TOP, BG_COOL_BOTTOM, BG_COOL_GLOW);
 
         background = new Sprite(background_image);
         background_2 = new Sprite(background_2_image);
+        currentBackground = background;
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, w_world / 2, h_world / 2);
@@ -178,9 +289,9 @@ import java.util.TimerTask;
         withdt_board = (float) (w_world - w_world * 0.25);
         height_board = (float) (w_world * 0.04);
 
-        board_image = new Texture("board.png");
-        board_2_image = new Texture("board_2.jpg");
-        rectangle_barrier_image = new Texture("rectangle_barrier.jpg");
+        board_image = ProceduralAssets.solid(BOARD_COLOR);
+        board_2_image = ProceduralAssets.solid(BOARD2_COLOR);
+        rectangle_barrier_image = ProceduralAssets.solid(BARRIER_COLOR);
 
         circle_image = getTextureBall();
         hole_image = getTextureHole();
@@ -195,249 +306,88 @@ import java.util.TimerTask;
         glyph_var1 = new GlyphLayout();
         glyph_var2 = new GlyphLayout();
 
-        Texture image_button_up = new Texture("Menu/play.png");
-
-        Texture image_button_menu_up = new Texture("Menu/menu_button_up.png");
-        //image_button_menu_down = new Texture("Menu/menu_button_down.png");
-
-        ImageButton btn = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_button_up)));
-        btn.setX(w_world / 2 - image_button_up.getTextureData().getWidth() / 2);
-        btn.setY(h_world / 2 - image_button_up.getTextureData().getHeight() / 2);
-
-        ImageButton btn_menu = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_button_menu_up)));
-        btn_menu.setX(w_world / 2 - image_button_menu_up.getTextureData().getWidth() / 2);
-        btn_menu.setY((float) (h_world / 2 - image_button_menu_up.getTextureData().getHeight() / 2 - h_world * 0.4));
-
-        initializationLevels();
-
-        stage = new Stage();
-        Gdx.input.setInputProcessor(stage);
-        stage.addActor(btn);
-        btn.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (!menu) {
-                    getScreen(1);
-                    stage.dispose();
-                }
-            }
-        });
-
-        stage.addActor(btn_menu);
-        btn_menu.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                menu = true;
-                Gdx.input.setInputProcessor(stage_lvl);
-            }
-        });
+        titleFont = makeFont(Math.round(size_text_result * 1.6f));
+        optionFont = makeFont(size_text_result);
+        menuGlyph = new GlyphLayout();
+        playTex = new Texture("Menu/play.png");
+        playSize = w_world * 0.24f;
+        playX = (w_world - playSize) / 2f;
+        playY = h_world * 0.56f - playSize / 2f;
+        Gdx.input.setInputProcessor(null);
 
         getTimer();
         getTimerGestures();
     }
 
     static void createdBoard() {
-        board = new Sprite(board_image, (int) (withdt_board), (int) height_board);
+        board = new Sprite(board_image);
+        board.setSize(withdt_board, height_board);
+        board.setOrigin(withdt_board / 2, height_board / 2);
         board.setX((float) (w_world / 2 - w_world * 0.25 - w_world * 0.25 / 2));
         board.setY((float) (h_world * 0.06));
 
-        board_2 = new Sprite(board_2_image, (int) (withdt_board), (int) height_board);
+        board_2 = new Sprite(board_2_image);
+        board_2.setSize(withdt_board, height_board);
+        board_2.setOrigin(withdt_board / 2, height_board / 2);
         board_2.setX((float) (w_world / 2 - w_world * 0.25 - w_world * 0.25 / 2));
         board_2.setY((float) (h_world * 0.06));
     }
 
-    private void initializationLevels() {
-        getTextureLvl();
+    /**
+     * Builds a FreeType font for crisp text: linear filtering smooths glyph
+     * edges, and the font is rasterised at the real pixel density (then scaled
+     * back) so it stays sharp on HiDPI/Retina where the framebuffer is upscaled.
+     */
+    public static BitmapFont makeFont(int size) {
+        float density = Gdx.graphics.getBackBufferWidth() / (float) Gdx.graphics.getWidth();
+        if (density < 1f) density = 1f;
 
-        //System.out.println(h_world);
+        FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        param.size = Math.max(1, Math.round(size * density));
+        param.characters = lang;
+        param.color = Color.WHITE;
+        param.minFilter = Texture.TextureFilter.Linear;
+        param.magFilter = Texture.TextureFilter.Linear;
 
-        stage_lvl = new Stage();
-        Gdx.input.setInputProcessor(stage_lvl);
-
-        ImageButton level1 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level1)));
-        level1.setX((float) (w_world / 2 - image_level1.getTextureData().getWidth() / 2 - image_level1.getTextureData().getWidth() * 1.9));
-        level1.setY(h_world / 2 - image_level1.getTextureData().getHeight() / 2 + image_level1.getTextureData().getHeight() * 2);
-        stage_lvl.addActor(level1);
-        level1.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(1);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-
-        ImageButton level2 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level2)));
-        level2.setX((float) (w_world / 2 - image_level2.getTextureData().getWidth() / 2 - image_level2.getTextureData().getWidth() * 0.65));
-        level2.setY(h_world / 2 - image_level2.getTextureData().getHeight() / 2 + image_level2.getTextureData().getHeight() * 2);
-        stage_lvl.addActor(level2);
-        level2.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(2);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-
-        ImageButton level3 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level3)));
-        level3.setX((float) (w_world / 2  + image_level3.getTextureData().getWidth() / 2 * 0.2));
-        level3.setY(h_world / 2 - image_level3.getTextureData().getHeight() / 2 + image_level3.getTextureData().getHeight() * 2);
-        stage_lvl.addActor(level3);
-        level3.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(3);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-
-        ImageButton level4 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level4)));
-        level4.setX((float) (w_world / 2  + image_level4.getTextureData().getWidth() / 2 * 2.7));
-        level4.setY(h_world / 2 - image_level4.getTextureData().getHeight() / 2 + image_level4.getTextureData().getHeight() * 2);
-        stage_lvl.addActor(level4);
-        level4.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(4);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-
-        ImageButton level5 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level5)));
-        level5.setX((float) (w_world / 2 - image_level5.getTextureData().getWidth() / 2 - image_level5.getTextureData().getWidth() * 1.9));
-        level5.setY((h_world / 2 - image_level5.getTextureData().getHeight() / 2 + image_level5.getTextureData().getHeight() / 2));
-        stage_lvl.addActor(level5);
-        level5.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(5);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-
-        ImageButton level6 = new ImageButton(new TextureRegionDrawable(new TextureRegion(image_level6)));
-        level6.setX((float) (w_world / 2 - image_level6.getTextureData().getWidth() / 2 - image_level6.getTextureData().getWidth() * 0.65));
-        level6.setY((h_world / 2 - image_level6.getTextureData().getHeight() / 2 + image_level6.getTextureData().getHeight() / 2));
-        stage_lvl.addActor(level6);
-        level6.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                getScreen(6);
-                stage.dispose();
-                stage_lvl.dispose();
-            }
-        });
-    }
-
-    private void getTextureLvl() {
-
-        if (h_world >= 1280 && h_world < 1920) {
-            image_level1 = new Texture("Menu/Number/number_1_100.png");
-            image_level2 = new Texture("Menu/Number/number_2_100.png");
-            image_level3 = new Texture("Menu/Number/number_3_100.png");
-            image_level4 = new Texture("Menu/Number/number_4_100.png");
-            image_level5 = new Texture("Menu/Number/number_5_100.png");
-            image_level6 = new Texture("Menu/Number/number_6_100.png");
-        } else if (h_world >= 1920 && h_world < 2560) {
-            image_level1 = new Texture("Menu/Number/number_1_200.png");
-            image_level2 = new Texture("Menu/Number/number_2_200.png");
-            image_level3 = new Texture("Menu/Number/number_3_200.png");
-            image_level4 = new Texture("Menu/Number/number_4_200.png");
-            image_level5 = new Texture("Menu/Number/number_5_200.png");
-            image_level6 = new Texture("Menu/Number/number_6_200.png");
-        } else if (h_world < 1280) {
-            image_level1 = new Texture("Menu/Number/number_1_100.png");
-            image_level2 = new Texture("Menu/Number/number_2_100.png");
-            image_level3 = new Texture("Menu/Number/number_3_100.png");
-            image_level4 = new Texture("Menu/Number/number_4_100.png");
-            image_level5 = new Texture("Menu/Number/number_5_100.png");
-            image_level6 = new Texture("Menu/Number/number_6_100.png");
-        } else if (h_world >= 2560) {
-            image_level1 = new Texture("Menu/Number/number_1_200.png");
-            image_level2 = new Texture("Menu/Number/number_2_200.png");
-            image_level3 = new Texture("Menu/Number/number_3_200.png");
-            image_level4 = new Texture("Menu/Number/number_4_200.png");
-            image_level5 = new Texture("Menu/Number/number_5_200.png");
-            image_level6 = new Texture("Menu/Number/number_6_200.png");
+        BitmapFont font = generator.generateFont(param);
+        if (density != 1f) {
+            font.getData().setScale(1f / density);
         }
+        return font;
     }
 
+    /** Sizes a PNG ImageButton to its texture scaled by {@link #uiScale} so UI icons are screen-relative. */
+    public static void fitButton(ImageButton button, float texWidth, float texHeight) {
+        float w = texWidth * uiScale;
+        float h = texHeight * uiScale;
+        button.getImage().setScaling(Scaling.stretch);
+        button.getImageCell().size(w, h);
+        button.setSize(w, h);
+    }
+
+    // Hole + on-screen-text + dynamic-hole tuning, derived from screen width so
+    // the game stays resolution-independent (no pre-rendered size buckets).
+    // Constants are calibrated so a ~1080px-wide phone matches the old assets.
     private Texture getTextureHole() {
+        size_text = Math.max(12, Math.round(w_world * 0.045f));
+        size_text = Math.min(60, size_text);
+        size_text_result = Math.round(size_text * 1.5f);
+        size_text_result = Math.min(90, size_text_result);
+        speed_hole = Math.max(5, Math.min(14, Math.round(11000f / w_world)));
+        time_step = 0.6f;
 
-        if (h_world >= 1280 && h_world < 1920) {
-            size_text = 34;
-            size_text_result = 54;
-            speed_hole = 10;
-            time_step = 0.6f;
-            return new Texture("Hole/Circle_Dark_75x75.png");
-        } else if (h_world >= 1920 && h_world < 2560) {
-            size_text = 64;
-            size_text_result = 84;
-            speed_hole = 8;
-            time_step = 0.55f;
-            return new Texture("Hole/Circle_Dark_95x95.png");
-        } else if (h_world < 1280) {
-            size_text = 24;
-            size_text_result = 44;
-            speed_hole = 12;
-            time_step = 0.65f;
-            return new Texture("Hole/Circle_Dark_30x30.png");
-        } else if (h_world >= 2560) {
-            size_text = 94;
-            size_text_result = 114;
-            speed_hole = 5;
-            time_step = 0.51f;
-            return new Texture("Hole/Circle_Dark_128x128.png");
-        }
-
-        return null;
+        int diameter = Math.round(w_world * 0.0695f);
+        return ProceduralAssets.hole(diameter, HOLE_COLOR);
     }
 
     private Texture getTextureBall() {
+        texture_gest_right = "Gestures/training_right_74.png";
+        texture_gest_left = "Gestures/training_left_74.png";
+        texture_gest_right_update = "Gestures/training_right_64.png";
+        texture_gest_left_update = "Gestures/training_left_64.png";
 
-        if (h_world >= 1280 && h_world < 1920) {
-
-            texture_gest_right = "Gestures/training_right_74.png";
-            texture_gest_left = "Gestures/training_left_74.png";
-
-            texture_gest_right_update = "Gestures/training_right_64.png";
-            texture_gest_left_update = "Gestures/training_left_64.png";
-
-            return new Texture("Circle/Circle_Grey_65x65.png");
-        } else if (h_world >= 1920 && h_world < 2560) {
-
-            texture_gest_right = "Gestures/training_right_94.png";
-            texture_gest_left = "Gestures/training_left_94.png";
-
-            texture_gest_right_update = "Gestures/training_right_84.png";
-            texture_gest_left_update = "Gestures/training_left_84.png";
-
-            return new Texture("Circle/Circle_Grey_85x85.png");
-        } else if (h_world < 1280) {
-
-            texture_gest_right = "Gestures/training_right_94.png";
-            texture_gest_left = "Gestures/training_left_94.png";
-
-            texture_gest_right_update = "Gestures/training_right_84.png";
-            texture_gest_left_update = "Gestures/training_left_84.png";
-
-            return new Texture("Circle/Circle_Grey_20x20.png");
-        } else if (h_world >= 2560) {
-
-            texture_gest_right = "Gestures/training_right_94.png";
-            texture_gest_left = "Gestures/training_left_94.png";
-
-            texture_gest_right_update = "Gestures/training_right_84.png";
-            texture_gest_left_update = "Gestures/training_left_84.png";
-
-            return new Texture("Circle/Circle_Grey_118x118.png");
-        }
-
-        return null;
+        int diameter = Math.round(w_world * 0.06f);
+        return ProceduralAssets.ball(diameter, BALL_COLOR);
     }
 
     @Override
@@ -454,6 +404,11 @@ import java.util.TimerTask;
 
         if (timer_dynamic_body != null)
         timer_dynamic_body.cancel();
+
+        if (currentBackgroundTexture != null)
+        currentBackgroundTexture.dispose();
+
+        if (titleFont != null) titleFont.dispose();
     }
 
     private void getTimer() {
@@ -463,6 +418,7 @@ import java.util.TimerTask;
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                if (paused) return;
                 String second, minute;
                 seconds++;
 
@@ -507,6 +463,7 @@ import java.util.TimerTask;
         timer_dynamic_body.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                if (paused) return;
                 if (box_hole_din_sign) box_din++; else box_din--;
 
             }

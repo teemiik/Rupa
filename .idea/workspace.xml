@@ -10,31 +10,78 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="da565bc6-b299-4b92-bce6-98521ccdf0fe" name="Changes" comment="update project">
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level1.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level3.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level4.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level5.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level6.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level7.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level8.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/levels/level9.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Debug.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/LevelData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/LevelLoader.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/LevelScreen.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/LevelSelectScreen.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/ProceduralAssets.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Progress.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx-box2d.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx-box2d.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx-freetype.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx-freetype.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/arm64-v8a/libgdx.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx-box2d.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx-box2d.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx-freetype.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx-freetype.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/armeabi-v7a/libgdx.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86/libgdx-box2d.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86/libgdx-box2d.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86/libgdx-freetype.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86/libgdx-freetype.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86/libgdx.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86/libgdx.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86_64/libgdx-box2d.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86_64/libgdx-box2d.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86_64/libgdx-freetype.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86_64/libgdx-freetype.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/libs/x86_64/libgdx.so" beforeDir="false" afterPath="$PROJECT_DIR$/android/libs/x86_64/libgdx.so" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/src/main/java/com/circlesandholes/game/android/AndroidLauncher.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/src/main/java/com/circlesandholes/game/android/AndroidLauncher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Circle/Circle_Grey_118x118.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Circle/Circle_Grey_20x20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Circle/Circle_Grey_40x40.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Circle/Circle_Grey_65x65.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Circle/Circle_Grey_85x85.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Gestures/training_left_84.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Gestures/training_left_94.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Gestures/training_right_84.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Gestures/training_right_94.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Hole/Circle_Dark_128x128.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Hole/Circle_Dark_30x30.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Hole/Circle_Dark_50x50.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Hole/Circle_Dark_75x75.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Hole/Circle_Dark_95x95.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_1_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_1_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_1_60.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_2_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_2_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_2_60.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_3_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_3_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_4_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_4_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_5_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_5_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_6_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/Number/number_6_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/Menu/menu_button_down.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/background.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/background_2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/badlogic.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/board.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/board_2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/rectangle_barrier.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Intro.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Intro.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level1.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level2.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level3.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level4.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level5.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/Levels/Level6.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/TryContinueEnd.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/circlesandholes/game/TryContinueEnd.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lwjgl3/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/lwjgl3/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lwjgl3/src/main/java/com/circlesandholes/game/lwjgl3/Lwjgl3Launcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/lwjgl3/src/main/java/com/circlesandholes/game/lwjgl3/Lwjgl3Launcher.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/artem/.android/avd/Pixel_8_Pro.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/artem/.android/avd/Nexus_5_API_31.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -77,7 +124,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/teemiik/Rupa.git&quot;,
-    &quot;accountId&quot;: &quot;d9de6cef-3eff-4072-8bac-8a27de21d081&quot;
+    &quot;accountId&quot;: &quot;c8119425-f626-492c-bba0-bc302d6748f0&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -91,14 +138,17 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Android App.android.executor": "Run",
+    "Application.Lwjgl3Launcher.executor": "Run",
     "BundleExportedModule": "Rupa.android",
     "ExportBundle.BundlePathForRupa.android": "/Users/artem/Documents/JavaProject/Rupa/android",
+    "Gradle.Rupa:lwjgl3 [:lwjgl3:com.circlesandholes.game.lwjgl3.Lwjgl3Launcher.main()].executor": "Run",
     "Gradle.RupaNew:android [assemble].executor": "Run",
     "Gradle.RupaNew:android [build].executor": "Run",
     "Gradle.RupaNew:android [sourceSets].executor": "Run",
     "Gradle.RupaNew:ios [:ios:IOSLauncher.main()].executor": "Run",
     "Gradle.RupaNew:lwjgl3 [:lwjgl3:Lwjgl3Launcher.main()].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "external.system.has.shared.sources": "true",
     "git-widget-placeholder": "master",
@@ -125,7 +175,7 @@
       <recent name="$PROJECT_DIR$/assets" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.RupaNew:android [assemble]">
+  <component name="RunManager" selected="Android App.android">
     <configuration name="android" type="AndroidRunConfigurationType" factoryName="Android App">
       <module name="Rupa.android" />
       <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
@@ -171,7 +221,6 @@
     </configuration>
     <configuration name="IOSLauncher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.circlesandholes.game.ios.IOSLauncher" />
-      <module name="RupaNew.ios.main" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.circlesandholes.game.ios.*" />
@@ -184,7 +233,7 @@
     </configuration>
     <configuration name="Lwjgl3Launcher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.circlesandholes.game.lwjgl3.Lwjgl3Launcher" />
-      <module name="RupaNew.lwjgl3.main" />
+      <module name="Rupa.lwjgl3.main" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.circlesandholes.game.lwjgl3.*" />
@@ -271,11 +320,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Lwjgl3Launcher" />
         <item itemvalue="Gradle.RupaNew:android [assemble]" />
         <item itemvalue="Gradle.RupaNew:android [sourceSets]" />
         <item itemvalue="Gradle.RupaNew:android [build]" />
         <item itemvalue="Application.IOSLauncher" />
-        <item itemvalue="Application.Lwjgl3Launcher" />
       </list>
     </recent_temporary>
   </component>
@@ -288,6 +337,19 @@
       <option name="presentableId" value="Default" />
       <updated>1722517749367</updated>
     </task>
+    <task id="LOCAL-00001" summary="update project">
+      <option name="closed" value="true" />
+      <created>1760036778685</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1760036778685</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="update project" />
+    <option name="LAST_COMMIT_MESSAGE" value="update project" />
   </component>
 </project>
