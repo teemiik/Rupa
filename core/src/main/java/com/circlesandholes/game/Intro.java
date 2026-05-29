@@ -10,15 +10,11 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.I18NBundle;
 import com.badlogic.gdx.utils.Scaling;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,8 +32,12 @@ import java.util.TimerTask;
     private BitmapFont titleFont;
     private BitmapFont optionFont;
     private GlyphLayout menuGlyph;
+    private int menuPressedIndex = -1;
+    private float menuPressTimer = 0f;
     private Texture playTex;
     private float playX, playY, playSize;
+
+    public static I18NBundle bundle;
 
     public static String lang = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789][_!$%#@|\\\\/?^-+=()*&.:;,{}\\\"´`'<>";
 
@@ -50,8 +50,8 @@ import java.util.TimerTask;
     private static final float UI_REFERENCE_WIDTH = 1080f;
     private static float withdt_board;
 
-    public static final int VELOCITY_ITERATIONS = 6;
-    public static final int POSITION_ITERATIONS = 2;
+    public static final int VELOCITY_ITERATIONS = 8;
+    public static final int POSITION_ITERATIONS = 8;
     public static float time_step;
 
     private static Texture board_image;
@@ -121,7 +121,7 @@ import java.util.TimerTask;
     private static final Color HOLE_COLOR = new Color(0.10f, 0.10f, 0.12f, 1f);
     private static final Color BOARD_COLOR = new Color(0.62f, 0.30f, 0.28f, 1f);
     private static final Color BOARD2_COLOR = new Color(0.34f, 0.40f, 0.46f, 1f);
-    private static final Color BARRIER_COLOR = new Color(0.12f, 0.12f, 0.13f, 1f);
+    public static final Color BARRIER_COLOR = new Color(0.12f, 0.12f, 0.13f, 1f);
     private static final Color BG_WARM_TOP = new Color(0.80f, 0.76f, 0.68f, 1f);
     private static final Color BG_WARM_BOTTOM = new Color(0.52f, 0.13f, 0.18f, 1f);
     private static final Color BG_WARM_GLOW = new Color(0.96f, 0.90f, 0.78f, 1f);
@@ -179,7 +179,7 @@ import java.util.TimerTask;
         if (currentBackgroundTexture != null) {
             currentBackgroundTexture.dispose();
         }
-        currentBackgroundTexture = ProceduralAssets.background(top, bottom, glow);
+        currentBackgroundTexture = ProceduralAssets.backgroundPixel(top, bottom, glow);
         currentBackground = new Sprite(currentBackgroundTexture);
 
         // Board with a vertical bevel (lighter top, darker bottom) in the level's hue.
@@ -221,26 +221,41 @@ import java.util.TimerTask;
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // The start menu is drawn here only while no other screen is active;
-        // levels, the picker and result screens are real Screens drawn by super.render().
         if (getScreen() == null) {
+            if (menuPressTimer > 0) {
+                menuPressTimer -= Gdx.graphics.getDeltaTime();
+                if (menuPressTimer <= 0) {
+                    menuPressTimer = 0;
+                    executeMenuAction();
+                    menuPressedIndex = -1;
+                }
+            }
+
             batch.begin();
             batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            drawMenuText(titleFont, "Rupa", h_world * 0.82f);
-            batch.draw(playTex, playX, playY, playSize, playSize);
-            drawMenuText(optionFont, "Уровни", h_world * 0.34f);
-            drawMenuText(optionFont, "Выход", h_world * 0.23f);
+            drawMenuText(titleFont, bundle.get("app_name"), h_world * 0.82f, false);
+
+            float ps = menuPressedIndex == 0 ? playSize * 0.92f : playSize;
+            float px = playX + (playSize - ps) / 2f;
+            float py = playY + (playSize - ps) / 2f;
+            batch.draw(playTex, px, py, ps, ps);
+
+            drawMenuText(optionFont, bundle.get("menu_levels"), h_world * 0.34f, menuPressedIndex == 1);
+            drawMenuText(optionFont, bundle.get("menu_exit"), h_world * 0.23f, menuPressedIndex == 2);
             batch.end();
 
-            if (Gdx.input.justTouched()) {
+            if (menuPressTimer <= 0 && Gdx.input.justTouched()) {
                 float tx = Gdx.input.getX();
                 float ty = h_world - Gdx.input.getY();
                 if (tx >= playX && tx <= playX + playSize && ty >= playY && ty <= playY + playSize) {
-                    goToLevel(1);
+                    menuPressedIndex = 0;
+                    menuPressTimer = 0.08f;
                 } else if (menuTap(tx, ty, h_world * 0.34f)) {
-                    setScreen(new LevelSelectScreen(this, null));
+                    menuPressedIndex = 1;
+                    menuPressTimer = 0.08f;
                 } else if (menuTap(tx, ty, h_world * 0.23f)) {
-                    Gdx.app.exit();
+                    menuPressedIndex = 2;
+                    menuPressTimer = 0.08f;
                 }
             }
         }
@@ -248,14 +263,31 @@ import java.util.TimerTask;
         super.render();
     }
 
-    private void drawMenuText(BitmapFont font, String s, float y) {
+    private void executeMenuAction() {
+        if (menuPressedIndex == 0) {
+            goToLevel(1);
+        } else if (menuPressedIndex == 1) {
+            setScreen(new LevelSelectScreen(this, null));
+        } else if (menuPressedIndex == 2) {
+            Gdx.app.exit();
+        }
+    }
+
+    private void drawMenuText(BitmapFont font, String s, float y, boolean pressed) {
         menuGlyph.setText(font, s);
         float x = w_world / 2 - menuGlyph.width / 2;
         float o = Math.max(1f, w_world * 0.004f);
-        font.setColor(0f, 0f, 0f, 0.5f);
-        font.draw(batch, s, x + o, y - o);
-        font.setColor(Color.WHITE);
-        font.draw(batch, s, x, y);
+        if (pressed) {
+            font.setColor(0f, 0f, 0f, 0.6f);
+            font.draw(batch, s, x + o * 0.5f, y - o * 0.5f);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x + o, y - o);
+        } else {
+            font.setColor(0f, 0f, 0f, 0.5f);
+            font.draw(batch, s, x + o, y - o);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x, y);
+        }
     }
 
     private boolean menuTap(float tx, float ty, float y) {
@@ -270,14 +302,15 @@ import java.util.TimerTask;
         this.batch = batch;
 
         Gdx.app.log("MyTag", String.valueOf(Gdx.graphics.getDensity()));
+        bundle = I18NBundle.createBundle(Gdx.files.internal("strings"));
 
         w_world = Gdx.graphics.getWidth();
         h_world = Gdx.graphics.getHeight();
 
         uiScale = w_world / UI_REFERENCE_WIDTH;
 
-        background_image = ProceduralAssets.background(BG_WARM_TOP, BG_WARM_BOTTOM, BG_WARM_GLOW);
-        background_2_image = ProceduralAssets.background(BG_COOL_TOP, BG_COOL_BOTTOM, BG_COOL_GLOW);
+        background_image = ProceduralAssets.backgroundPixel(BG_WARM_TOP, BG_WARM_BOTTOM, BG_WARM_GLOW);
+        background_2_image = ProceduralAssets.backgroundPixel(BG_COOL_TOP, BG_COOL_BOTTOM, BG_COOL_GLOW);
 
         background = new Sprite(background_image);
         background_2 = new Sprite(background_2_image);
@@ -402,11 +435,13 @@ import java.util.TimerTask;
         timer.cancel();
         timer_gest.cancel();
 
-        if (timer_dynamic_body != null)
-        timer_dynamic_body.cancel();
+        if (timer_dynamic_body != null) {
+            timer_dynamic_body.cancel();
+        }
 
-        if (currentBackgroundTexture != null)
-        currentBackgroundTexture.dispose();
+        if (currentBackgroundTexture != null) {
+            currentBackgroundTexture.dispose();
+        }
 
         if (titleFont != null) titleFont.dispose();
     }

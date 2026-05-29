@@ -7,42 +7,38 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 
-import static com.circlesandholes.game.Intro.box_din;
-import static com.circlesandholes.game.Intro.camera;
-import static com.circlesandholes.game.Intro.faild;
-import static com.circlesandholes.game.Intro.glyph;
-import static com.circlesandholes.game.Intro.h_world;
-import static com.circlesandholes.game.Intro.size_text;
-import static com.circlesandholes.game.Intro.size_text_result;
-import static com.circlesandholes.game.Intro.text_total;
-import static com.circlesandholes.game.Intro.the_end;
-import static com.circlesandholes.game.Intro.timer_dynamic_body;
-import static com.circlesandholes.game.Intro.w_world;
-import static com.circlesandholes.game.Intro.win;
+import static com.circlesandholes.game.Intro.*;
 
-/**
- * Win / lose / "the end" result screen. Uses the same text-option style as the
- * pause menu (centred labels with a shadow on a card panel), with manual tap
- * hit-testing — no scene2d buttons. Records the best time and shows a win burst.
- */
 public class TryContinueEnd extends Game implements Screen {
 
     final Intro intro;
     final int level;
 
     private final SpriteBatch batch;
-    private final BitmapFont titleFont;   // headings
-    private final BitmapFont optionFont;   // tappable options
-    private final BitmapFont infoFont;     // time / record
+    private final BitmapFont titleFont;
+    private final BitmapFont optionFont;
+    private final BitmapFont infoFont;
 
     private final Texture blackTex;
     private final Texture particleTex;
-    private final Texture panelTex;
-    private float panelX, panelY, panelW, panelH;
+    private final Texture panelTexLose;
+    private final Texture panelShadowTexLose;
+    private final Texture panelTexWin;
+    private final Texture panelShadowTexWin;
+    private final Texture panelTexEnd;
+    private final Texture panelShadowTexEnd;
+    private float panelW;
+    private float panelXLose, panelYLose, panelHLose;
+    private float panelShadowXLose, panelShadowYLose;
+    private float panelXWin, panelYWin, panelHWin;
+    private float panelShadowXWin, panelShadowYWin;
+    private float panelXEnd, panelYEnd, panelHEnd;
+    private float panelShadowXEnd, panelShadowYEnd;
     private float particleSize;
     private float fade = 0.7f;
     private boolean one_render = true;
@@ -50,9 +46,8 @@ public class TryContinueEnd extends Game implements Screen {
 
     private final Vector3 touchPos = new Vector3();
 
-    // Dynamic Y positions computed from font line heights
-    private float loseTitleY, loseRetryY, loseLevelsY;
-    private float winTitleY, winTimeY, winRecordY, winNextY, winRetryY, winLevelsY;
+    private float loseTitleY, loseRetryY, loseLevelsY, loseMenuY;
+    private float winTitleY, winTimeY, winRecordY, winNextY, winRetryY, winLevelsY, winMenuY;
     private float endContinueY;
 
     private static final int BURST = 26;
@@ -62,7 +57,10 @@ public class TryContinueEnd extends Game implements Screen {
     private final float[] vy = new float[BURST];
     private final float[] life = new float[BURST];
 
-    public TryContinueEnd(final Intro intro, final int level) {
+    private int pressedIndex = -1;
+    private float pressTimer = 0f;
+
+public TryContinueEnd(final Intro intro, final int level) {
         this.intro = intro;
         this.level = level;
 
@@ -71,43 +69,130 @@ public class TryContinueEnd extends Game implements Screen {
         blackTex = ProceduralAssets.solid(Color.BLACK);
         particleSize = w_world * 0.018f;
         particleTex = ProceduralAssets.circle(Math.max(2, Math.round(particleSize)), Color.WHITE);
-        panelW = w_world * 0.84f;
-        panelH = h_world * 0.84f;
-        panelX = (w_world - panelW) / 2f;
-        panelY = (h_world - panelH) / 2f;
-        panelTex = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelH),
-                w_world * 0.06f, new Color(0.16f, 0.16f, 0.22f, 0.5f));
 
         titleFont = Intro.makeFont(Math.round(size_text_result * 1.35f));
         optionFont = Intro.makeFont(size_text_result);
         infoFont = Intro.makeFont(size_text);
 
-        computeYPositions();
+        GlyphLayout m = new GlyphLayout();
+        float maxW = 0f;
+        m.setText(titleFont, Intro.bundle.get("result_lose_title"));
+        maxW = Math.max(maxW, m.width);
+        m.setText(titleFont, Intro.bundle.get("result_win_title"));
+        maxW = Math.max(maxW, m.width);
+        for (String s : new String[]{Intro.bundle.get("result_restart"), Intro.bundle.get("result_levels"), Intro.bundle.get("result_menu"), Intro.bundle.get("result_next_level")}) {
+            m.setText(optionFont, s);
+            maxW = Math.max(maxW, m.width);
+        }
+        m.setText(infoFont, Intro.bundle.format("result_time", Intro.bundle.get("timer_placeholder")));
+        maxW = Math.max(maxW, m.width);
+        m.setText(infoFont, Intro.bundle.format("result_record", Intro.bundle.get("timer_placeholder")));
+        maxW = Math.max(maxW, m.width);
 
-        text_total = "Уровень пройден за ";
-    }
+        float padH = w_world * 0.08f;
+        float padV = w_world * 0.08f;
+        float radius = w_world * 0.06f;
+        panelW = Math.min(maxW + padH * 2, w_world * 0.92f);
 
-    private void computeYPositions() {
-        float panelCenterY = panelY + panelH / 2f;
-        float lineHeightTitle = titleFont.getLineHeight();
-        float lineHeightOption = optionFont.getLineHeight();
-        float lineHeightInfo = infoFont.getLineHeight();
-        
-        // Lose screen positions
-        loseTitleY = panelCenterY + lineHeightTitle * 1.5f;
-        loseRetryY = panelCenterY - lineHeightOption * 0.5f;
-        loseLevelsY = panelCenterY - lineHeightOption * 2.5f;
-        
-        // Win screen positions  
-        winTitleY = panelCenterY + lineHeightTitle * 3f;
-        winTimeY = panelCenterY + lineHeightInfo * 1.5f;
-        winRecordY = panelCenterY + lineHeightInfo * 0.5f;
-        winNextY = panelCenterY - lineHeightOption * 1f;
-        winRetryY = panelCenterY - lineHeightOption * 2.5f;
-        winLevelsY = panelCenterY - lineHeightOption * 4f;
-        
-        // End screen position
-        endContinueY = panelCenterY;
+        float center = h_world / 2f;
+        float titleH = titleFont.getLineHeight();
+        float optH = optionFont.getLineHeight();
+        float infoH = infoFont.getLineHeight();
+        float titleAscent = titleFont.getAscent();
+        float optAscent = optionFont.getAscent();
+        float optDescent = optionFont.getDescent();
+        float nudge = optH * 0.25f;
+
+        // Loss panel
+        loseTitleY = center + titleH * 1.5f;
+        loseRetryY = center - optH * 0.5f;
+        loseLevelsY = center - optH * 2.5f;
+        loseMenuY = center - optH * 4.5f;
+
+        float loseContentTop = loseTitleY + titleAscent;
+        float loseContentBot = loseMenuY + optDescent;
+        float loseShift = center - (loseContentTop + loseContentBot) / 2f + nudge;
+        loseTitleY += loseShift;
+        loseRetryY += loseShift;
+        loseLevelsY += loseShift;
+        loseMenuY += loseShift;
+
+        // Win panel
+        winTitleY = center + titleH * 3f;
+        winTimeY = center + infoH * 1.5f;
+        winRecordY = center + infoH * 0.5f;
+        winNextY = center - optH * 1f;
+        winRetryY = center - optH * 2.5f;
+        winLevelsY = center - optH * 4f;
+        winMenuY = center - optH * 5.5f;
+
+        float winContentTop = winTitleY + titleAscent;
+        float winContentBot = winMenuY + optDescent;
+        float winShift = center - (winContentTop + winContentBot) / 2f + nudge;
+        winTitleY += winShift;
+        winTimeY += winShift;
+        winRecordY += winShift;
+        winNextY += winShift;
+        winRetryY += winShift;
+        winLevelsY += winShift;
+        winMenuY += winShift;
+
+        // The end panel
+        endContinueY = center;
+
+        float endContentTop = endContinueY + optAscent;
+        float endContentBot = endContinueY + optDescent;
+        float endShift = center - (endContentTop + endContentBot) / 2f + nudge;
+        endContinueY += endShift;
+
+        float soff = w_world * 0.007f;
+
+        // Lose panel
+        loseContentTop = loseTitleY + titleAscent;
+        loseContentBot = loseMenuY + optDescent;
+        float loseContentH = loseContentTop - loseContentBot;
+        panelHLose = Math.min(loseContentH + padV * 2, h_world * 0.92f);
+        panelXLose = (w_world - panelW) / 2f;
+        panelYLose = center - panelHLose / 2f;
+        panelShadowXLose = panelXLose + soff;
+        panelShadowYLose = panelYLose - soff;
+        panelTexLose = ProceduralAssets.roundRectGradient(Math.round(panelW), Math.round(panelHLose),
+                radius,
+                new Color(0.32f, 0.28f, 0.42f, 0.40f), new Color(0.10f, 0.08f, 0.16f, 0.55f));
+        panelShadowTexLose = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelHLose),
+                radius, new Color(0f, 0f, 0f, 0.25f));
+
+        // Win panel
+        winContentTop = winTitleY + titleAscent;
+        winContentBot = winMenuY + optDescent;
+        float winContentH = winContentTop - winContentBot;
+        panelHWin = Math.min(winContentH + padV * 2, h_world * 0.92f);
+        panelXWin = (w_world - panelW) / 2f;
+        panelYWin = center - panelHWin / 2f;
+        panelShadowXWin = panelXWin + soff;
+        panelShadowYWin = panelYWin - soff;
+        panelTexWin = ProceduralAssets.roundRectGradient(Math.round(panelW), Math.round(panelHWin),
+                radius,
+                new Color(0.32f, 0.28f, 0.42f, 0.40f), new Color(0.10f, 0.08f, 0.16f, 0.55f));
+        panelShadowTexWin = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelHWin),
+                radius, new Color(0f, 0f, 0f, 0.25f));
+
+        // The end panel
+        endContentTop = endContinueY + optAscent;
+        endContentBot = endContinueY + optDescent;
+        float endContentH = endContentTop - endContentBot;
+        panelHEnd = Math.min(endContentH + padV * 2, h_world * 0.92f);
+        panelXEnd = (w_world - panelW) / 2f;
+        panelYEnd = center - panelHEnd / 2f;
+        panelShadowXEnd = panelXEnd + soff;
+        panelShadowYEnd = panelYEnd - soff;
+        panelTexEnd = ProceduralAssets.roundRectGradient(Math.round(panelW), Math.round(panelHEnd),
+                radius,
+                new Color(0.32f, 0.28f, 0.42f, 0.40f), new Color(0.10f, 0.08f, 0.16f, 0.55f));
+        panelShadowTexEnd = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelHEnd),
+                radius, new Color(0f, 0f, 0f, 0.25f));
+
+        text_total = Intro.bundle.get("result_time");
     }
 
     @Override
@@ -115,59 +200,87 @@ public class TryContinueEnd extends Game implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (!faild) { // lost
+        if (pressTimer > 0) {
+            pressTimer -= delta;
+            if (pressTimer <= 0f) {
+                pressTimer = 0f;
+                executePressedAction();
+                pressedIndex = -1;
+            }
+        }
+
+        if (!faild) {
             batch.begin();
             batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            batch.draw(panelTex, panelX, panelY, panelW, panelH);
-            drawCentered(titleFont, "Не получилось", loseTitleY);
-            drawCentered(optionFont, "Заново", loseRetryY);
-            drawCentered(optionFont, "Уровни", loseLevelsY);
+            batch.draw(panelShadowTexLose, panelShadowXLose, panelShadowYLose, panelW, panelHLose);
+            batch.draw(panelTexLose, panelXLose, panelYLose, panelW, panelHLose);
+            drawCentered(titleFont, Intro.bundle.get("result_lose_title"), loseTitleY, false);
+            drawCentered(optionFont, Intro.bundle.get("result_restart"), loseRetryY, pressedIndex == 0);
+            drawCentered(optionFont, Intro.bundle.get("result_levels"), loseLevelsY, pressedIndex == 1);
+            drawCentered(optionFont, Intro.bundle.get("result_menu"), loseMenuY, pressedIndex == 2);
             batch.end();
 
-            if (tappedAt(loseRetryY)) {
-                doRetry();
-            } else if (tappedAt(loseLevelsY)) {
-                doLevels();
+            if (pressTimer <= 0f && Gdx.input.justTouched()) {
+                if (tappedAt(loseRetryY)) pressedIndex = 0;
+                else if (tappedAt(loseLevelsY)) pressedIndex = 1;
+                else if (tappedAt(loseMenuY)) pressedIndex = 2;
+                if (pressedIndex >= 0) pressTimer = 0.08f;
             }
 
         } else if (win) {
             if (one_render) {
-                text_total = "Уровень пройден за " + Progress.formatTime(Intro.finishSeconds);
+                text_total = Intro.bundle.format("result_time", Progress.formatTime(Intro.finishSeconds));
                 Progress.recordTime(level, Intro.finishSeconds);
-                recordStr = "Рекорд " + Progress.formatTime(Progress.bestTime(level));
+                recordStr = Intro.bundle.format("result_record", Progress.formatTime(Progress.bestTime(level)));
                 spawnBurst();
                 one_render = false;
             }
 
             batch.begin();
             batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            batch.draw(panelTex, panelX, panelY, panelW, panelH);
-            drawCentered(titleFont, "Победа!", winTitleY);
-            drawCentered(infoFont, text_total, winTimeY);
-            drawCentered(infoFont, recordStr, winRecordY);
-            drawCentered(optionFont, "Следующий уровень", winNextY);
-            drawCentered(optionFont, "Заново", winRetryY);
-            drawCentered(optionFont, "Уровни", winLevelsY);
+            batch.draw(panelShadowTexWin, panelShadowXWin, panelShadowYWin, panelW, panelHWin);
+            batch.draw(panelTexWin, panelXWin, panelYWin, panelW, panelHWin);
+            drawCentered(titleFont, Intro.bundle.get("result_win_title"), winTitleY, false);
+            drawCentered(infoFont, text_total, winTimeY, false);
+            drawCentered(infoFont, recordStr, winRecordY, false);
+            drawCentered(optionFont, Intro.bundle.get("result_next_level"), winNextY, pressedIndex == 0);
+            drawCentered(optionFont, Intro.bundle.get("result_restart"), winRetryY, pressedIndex == 1);
+            drawCentered(optionFont, Intro.bundle.get("result_levels"), winLevelsY, pressedIndex == 2);
+            drawCentered(optionFont, Intro.bundle.get("result_menu"), winMenuY, pressedIndex == 3);
             updateAndDrawBurst(delta);
             batch.end();
 
-            if (tappedAt(winNextY)) {
-                doContinue();
-            } else if (tappedAt(winRetryY)) {
-                doRetry();
-            } else if (tappedAt(winLevelsY)) {
-                doLevels();
+            if (pressTimer <= 0f && Gdx.input.justTouched()) {
+                if (tappedAt(winNextY)) pressedIndex = 0;
+                else if (tappedAt(winRetryY)) pressedIndex = 1;
+                else if (tappedAt(winLevelsY)) pressedIndex = 2;
+                else if (tappedAt(winMenuY)) pressedIndex = 3;
+                if (pressedIndex >= 0) pressTimer = 0.08f;
             }
 
         } else if (the_end) {
             batch.begin();
             batch.draw(Intro.currentBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            batch.draw(panelTex, panelX, panelY, panelW, panelH);
-            drawCentered(optionFont, "Продолжение следует...", endContinueY);
+            batch.draw(panelShadowTexEnd, panelShadowXEnd, panelShadowYEnd, panelW, panelHEnd);
+            batch.draw(panelTexEnd, panelXEnd, panelYEnd, panelW, panelHEnd);
+            drawCentered(optionFont, Intro.bundle.get("result_end_title"), endContinueY, false);
             batch.end();
         }
 
         drawFade(delta);
+    }
+
+    private void executePressedAction() {
+        if (!faild) {
+            if (pressedIndex == 0) doRetry();
+            else if (pressedIndex == 1) doLevels();
+            else if (pressedIndex == 2) doMenu();
+        } else if (win) {
+            if (pressedIndex == 0) doContinue();
+            else if (pressedIndex == 1) doRetry();
+            else if (pressedIndex == 2) doLevels();
+            else if (pressedIndex == 3) doMenu();
+        }
     }
 
     private void doRetry() {
@@ -187,11 +300,17 @@ public class TryContinueEnd extends Game implements Screen {
     }
 
     private void doLevels() {
-        // Keep this result screen alive so Back from the picker returns here.
         intro.setScreen(new LevelSelectScreen(intro, this));
     }
 
-    /** True if a tap landed this frame within the option band centred on baseline y. */
+    private void doMenu() {
+        faild = true;
+        win = false;
+        the_end = false;
+        cancelDynamicTimer();
+        intro.showMenu();
+    }
+
     private boolean tappedAt(float y) {
         if (!Gdx.input.justTouched()) return false;
         touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -203,14 +322,21 @@ public class TryContinueEnd extends Game implements Screen {
                 && touchPos.y >= cy - bandH / 2 && touchPos.y <= cy + bandH / 2;
     }
 
-    private void drawCentered(BitmapFont font, String s, float y) {
+    private void drawCentered(BitmapFont font, String s, float y, boolean pressed) {
         glyph.setText(font, s);
         float x = w_world / 2 - glyph.width / 2;
         float o = Math.max(1f, w_world * 0.004f);
-        font.setColor(0f, 0f, 0f, 0.5f);
-        font.draw(batch, s, x + o, y - o);
-        font.setColor(Color.WHITE);
-        font.draw(batch, s, x, y);
+        if (pressed) {
+            font.setColor(0f, 0f, 0f, 0.6f);
+            font.draw(batch, s, x + o * 0.5f, y - o * 0.5f);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x + o, y - o);
+        } else {
+            font.setColor(0f, 0f, 0f, 0.5f);
+            font.draw(batch, s, x + o, y - o);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x, y);
+        }
     }
 
     private void cancelDynamicTimer() {
@@ -280,7 +406,12 @@ public class TryContinueEnd extends Game implements Screen {
         infoFont.dispose();
         blackTex.dispose();
         particleTex.dispose();
-        panelTex.dispose();
+        panelTexLose.dispose();
+        panelShadowTexLose.dispose();
+        panelTexWin.dispose();
+        panelShadowTexWin.dispose();
+        panelTexEnd.dispose();
+        panelShadowTexEnd.dispose();
     }
 
     @Override
