@@ -28,6 +28,13 @@ public class LevelData {
     public List<Barrier> barriers = new ArrayList<Barrier>();
 
     /**
+     * Platforms that rotate continuously, adding dynamic obstacles.
+     * The physics body is KinematicBody with angular velocity.
+     * Positions/sizes use the same w_world/h_world fractions as barriers.
+     */
+    public List<RotatingPlatform> rotatingPlatforms = new ArrayList<RotatingPlatform>();
+
+    /**
      * Bounds that flip the box_din oscillation direction, evaluated on the first
      * dynamic hole's x. Levels 4/5 trigger on >= upper / <= lower; the last level
      * inverts that (inverted = true).
@@ -46,5 +53,16 @@ public class LevelData {
         public float x, y;        // sprite position (fractions of w_world / h_world)
         public float w, h;        // sprite size (fractions of w_world / h_world)
         public float rotation;    // degrees
+    }
+
+    /**
+     * A platform that rotates continuously around its center during gameplay.
+     * Pivot variants can be added later; for now all rotate around center.
+     */
+    public static class RotatingPlatform {
+        public float x, y;        // center position (fractions of w_world / h_world)
+        public float w, h;        // size (fractions of w_world / h_world)
+        public float rotationSpeed; // degrees per second, positive = clockwise
+        public String color = "default";
     }
 }

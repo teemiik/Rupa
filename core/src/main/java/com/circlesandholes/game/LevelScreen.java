@@ -10,52 +10,15 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.World;
-
-import com.circlesandholes.game.PhysicalBodies.BoxBoard;
-import com.circlesandholes.game.PhysicalBodies.BoxCircle;
-import com.circlesandholes.game.PhysicalBodies.BoxHole;
-import com.circlesandholes.game.PhysicalBodies.BoxRectangleBarrier;
+import com.badlogic.gdx.physics.box2d.*;
+import com.circlesandholes.game.PhysicalBodies.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.circlesandholes.game.Intro.POSITION_ITERATIONS;
-import static com.circlesandholes.game.Intro.VELOCITY_ITERATIONS;
-import static com.circlesandholes.game.Intro.background;
-import static com.circlesandholes.game.Intro.background_2;
-import static com.circlesandholes.game.Intro.board;
-import static com.circlesandholes.game.Intro.board_2;
-import static com.circlesandholes.game.Intro.camera;
-import static com.circlesandholes.game.Intro.circle;
-import static com.circlesandholes.game.Intro.faild;
-import static com.circlesandholes.game.Intro.generator;
-import static com.circlesandholes.game.Intro.getTimerDynamicBody;
-import static com.circlesandholes.game.Intro.h_world;
-import static com.circlesandholes.game.Intro.height_board;
-import static com.circlesandholes.game.Intro.hole_image;
-import static com.circlesandholes.game.Intro.lang;
-import static com.circlesandholes.game.Intro.minutes;
-import static com.circlesandholes.game.Intro.seconds;
-import static com.circlesandholes.game.Intro.size_text;
-import static com.circlesandholes.game.Intro.size_text_result;
-import static com.circlesandholes.game.Intro.text;
-import static com.circlesandholes.game.Intro.texture_gest_left;
-import static com.circlesandholes.game.Intro.texture_gest_left_update;
-import static com.circlesandholes.game.Intro.texture_gest_right;
-import static com.circlesandholes.game.Intro.texture_gest_right_update;
-import static com.circlesandholes.game.Intro.time_step;
-import static com.circlesandholes.game.Intro.w_world;
-import static com.circlesandholes.game.Intro.win;
+import static com.circlesandholes.game.Intro.*;
 
 /**
  * Single, data-driven game screen that replaces the six hand-written Level1..6
@@ -93,6 +56,11 @@ public class LevelScreen extends Game implements ContactListener, Screen {
     private final List<Sprite> dynamicSprites = new ArrayList<Sprite>();
     private final List<Sprite> barriers = new ArrayList<Sprite>();
 
+    private final List<Body> rotatingPlatformBodies = new ArrayList<Body>();
+    private final List<Sprite> rotatingPlatformSprites = new ArrayList<Sprite>();
+    private final List<LevelData.RotatingPlatform> rotatingPlatformDataList = new ArrayList<LevelData.RotatingPlatform>();
+    private Texture accentPlatformTex, defaultPlatformTex;
+
     // Tilt-gesture hints (tutorial level only). Two alternating frames per side.
     private Texture hintRightTexA, hintRightTexB, hintLeftTexA, hintLeftTexB;
     private Sprite hintRightA, hintRightB, hintLeftA, hintLeftB;
@@ -103,15 +71,22 @@ public class LevelScreen extends Game implements ContactListener, Screen {
     private final Texture blackTex;
     private final Texture pauseIconTex;
     private final Sprite pauseSprite;
-    private final Texture exitIconTex;
-    private final Sprite exitSprite;
     private final Texture shadowTex;
     private final Texture panelTex;
+    private final Texture panelShadowTex;
     private float panelX, panelY, panelW, panelH;
     private float pauseX, pauseY, pauseSize;
     private float dbgX, dbgY, dbgW, dbgH;
-    private final String[] pauseOptions = {"Продолжить", "Заново", "Уровни"};
+    private final String[] pauseOptions = {
+        Intro.bundle.get("pause_continue"),
+        Intro.bundle.get("pause_restart"),
+        Intro.bundle.get("pause_levels"),
+        Intro.bundle.get("pause_menu")
+    };
     private float fade = 0.7f;
+    private int pressedPauseIndex = -1;
+    private float pausePressTimer = 0f;
+    private float pauseShift;
 
     public LevelScreen(final Intro intro, int level, LevelData data) {
         this.intro = intro;
@@ -145,11 +120,12 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         buildStaticHoles();
         buildDynamicHoles();
         buildBarriers();
+        buildRotatingPlatforms();
         if (data.showHints) {
             buildHints();
         }
 
-        text = "00:00";
+        text = Intro.bundle.get("timer_placeholder");
         minutes = 0;
         seconds = 0;
 
@@ -171,18 +147,45 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         dbgX = w_world * 0.05f;
         dbgY = h_world * 0.86f;
 
-        float exS = w_world * 0.1f;
-        exitIconTex = ProceduralAssets.powerIcon(Math.round(exS), Color.WHITE);
-        exitSprite = new Sprite(exitIconTex);
-        exitSprite.setBounds(w_world / 2 - exS / 2, h_world * 0.30f - exS / 2, exS, exS);
-
         shadowTex = ProceduralAssets.softCircle(64);
-        panelW = w_world * 0.7f;
-        panelH = h_world * 0.60f;
+        GlyphLayout pm = new GlyphLayout();
+        float maxW = 0f;
+        for (String s : pauseOptions) {
+            pm.setText(pauseFont, s);
+            maxW = Math.max(maxW, pm.width);
+        }
+        pm.setText(pauseFont, Intro.bundle.get("pause_title"));
+        maxW = Math.max(maxW, pm.width);
+
+        float padH = w_world * 0.08f;
+        float padV = w_world * 0.08f;
+        float radius = w_world * 0.05f;
+        float optH = pauseFont.getLineHeight();
+        panelW = Math.min(maxW + padH * 2, w_world * 0.92f);
+
+        float pauseAscent = pauseFont.getAscent();
+        float pauseDescent = pauseFont.getDescent();
+        float centerY = h_world / 2f;
+        float pauseTitleY = centerY + optH * 3.3f;
+        float pauseOptLastY = centerY + optH * 1.5f - (pauseOptions.length - 1) * optH * 1.8f;
+
+        float contTop = pauseTitleY + pauseAscent;
+        float contBot = pauseOptLastY + pauseDescent;
+        pauseShift = centerY - (contTop + contBot) / 2f + optH * 0.25f;
+
+        float contentTop = pauseTitleY + pauseAscent + pauseShift;
+        float contentBot = pauseOptLastY + pauseDescent + pauseShift;
+        float contentH = contentTop - contentBot;
+        panelH = Math.min(contentH + padV * 2, h_world * 0.85f);
         panelX = (w_world - panelW) / 2f;
-        panelY = h_world * 0.20f;
-        panelTex = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelH),
-                w_world * 0.05f, new Color(0.18f, 0.18f, 0.24f, 0.55f));
+        panelY = centerY - panelH / 2f;
+
+        panelTex = ProceduralAssets.roundRectGradient(Math.round(panelW), Math.round(panelH),
+                radius,
+                new Color(0.22f, 0.18f, 0.32f, 0.40f), new Color(0.08f, 0.06f, 0.14f, 0.60f));
+
+        panelShadowTex = ProceduralAssets.roundRect(Math.round(panelW), Math.round(panelH),
+                radius, new Color(0f, 0f, 0f, 0.25f));
     }
 
     private void drawShadow(float cx, float cy, float diameter) {
@@ -192,12 +195,19 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         batch.setColor(Color.WHITE);
     }
 
-    private void drawShadowedText(BitmapFont font, String s, float x, float y) {
+    private void drawShadowedText(BitmapFont font, String s, float x, float y, boolean pressed) {
         float o = Math.max(1f, w_world * 0.004f);
-        font.setColor(0f, 0f, 0f, 0.5f);
-        font.draw(batch, s, x + o, y - o);
-        font.setColor(Color.WHITE);
-        font.draw(batch, s, x, y);
+        if (pressed) {
+            font.setColor(0f, 0f, 0f, 0.6f);
+            font.draw(batch, s, x + o * 0.5f, y - o * 0.5f);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x + o, y - o);
+        } else {
+            font.setColor(0f, 0f, 0f, 0.5f);
+            font.draw(batch, s, x + o, y - o);
+            font.setColor(Color.WHITE);
+            font.draw(batch, s, x, y);
+        }
     }
 
     private void buildStaticHoles() {
@@ -240,6 +250,31 @@ public class LevelScreen extends Game implements ContactListener, Screen {
             body.setUserData("barrier");
 
             barriers.add(s);
+        }
+    }
+
+    private void buildRotatingPlatforms() {
+        if (data.rotatingPlatforms.isEmpty()) return;
+
+        accentPlatformTex = ProceduralAssets.pixelBarTexture(new Color(0.8f, 0.4f, 0.2f, 1f));
+        defaultPlatformTex = ProceduralAssets.pixelBarTexture(Intro.BARRIER_COLOR);
+
+        for (LevelData.RotatingPlatform rp : data.rotatingPlatforms) {
+            int width = (int) (w_world * rp.w);
+            int height = (int) (h_world * rp.h);
+
+            Texture tex = "accent".equals(rp.color) ? accentPlatformTex : defaultPlatformTex;
+            Sprite s = new Sprite(tex, width, height);
+            s.setX(w_world * rp.x - width / 2f);
+            s.setY(h_world * rp.y - height / 2f);
+
+            Body body = new BoxRotatingPlatform().create(world, width / 2f, height / 2f);
+            body.setTransform(s.getX() + width / 2f, s.getY() + height / 2f, 0);
+            body.setUserData("rotatingPlatform");
+
+            rotatingPlatformBodies.add(body);
+            rotatingPlatformSprites.add(s);
+            rotatingPlatformDataList.add(rp);
         }
     }
 
@@ -288,6 +323,15 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         }
 
         if (Intro.paused) {
+            if (pausePressTimer > 0) {
+                pausePressTimer -= delta;
+                if (pausePressTimer <= 0) {
+                    pausePressTimer = 0;
+                    executePauseAction();
+                    pressedPauseIndex = -1;
+                    if (!Intro.paused) { drawFade(delta); return; }
+                }
+            }
             drawWorld();
             drawPauseOverlay();
             handlePauseInput();
@@ -330,6 +374,13 @@ public class LevelScreen extends Game implements ContactListener, Screen {
             win = true;
         }
 
+        for (int i = 0; i < rotatingPlatformBodies.size(); i++) {
+            Body body = rotatingPlatformBodies.get(i);
+            Sprite s = rotatingPlatformSprites.get(i);
+            s.setPosition(body.getPosition().x - s.getWidth() / 2f, body.getPosition().y - s.getHeight() / 2f);
+            s.setRotation((float) Math.toDegrees(body.getAngle()));
+        }
+
         // The world is in device pixels, so advance the simulation proportionally to screen
         // height (normalised to 640) — otherwise the ball covers a smaller fraction of a
         // big screen per frame and feels sluggish. Split into ~0.6 sub-steps for stability.
@@ -338,6 +389,15 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         float sub = total / subSteps;
         for (int s = 0; s < subSteps; s++) {
             world.step(sub, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+        }
+
+        // Rotate platforms manually using real delta time, so rotationSpeed means
+        // degrees per real second regardless of screen size or frame rate.
+        for (int i = 0; i < rotatingPlatformBodies.size(); i++) {
+            Body body = rotatingPlatformBodies.get(i);
+            LevelData.RotatingPlatform rp = rotatingPlatformDataList.get(i);
+            float angleDelta = (float) Math.toRadians(rp.rotationSpeed) * delta;
+            body.setTransform(body.getPosition(), body.getAngle() + angleDelta);
         }
 
         drawFade(delta);
@@ -356,6 +416,9 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         }
         for (Sprite barrier : barriers) {
             barrier.draw(batch);
+        }
+        for (Sprite rp : rotatingPlatformSprites) {
+            rp.draw(batch);
         }
         if (!dynamicSprites.isEmpty()) {
             updateDynamicHoles();
@@ -377,30 +440,32 @@ public class LevelScreen extends Game implements ContactListener, Screen {
 
     private void drawPauseOverlay() {
         batch.begin();
-        batch.setColor(0f, 0f, 0f, 0.55f);
+        batch.setColor(0f, 0f, 0f, 0.30f);
         batch.draw(blackTex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.setColor(Color.WHITE);
+        float soff = w_world * 0.007f;
+        batch.draw(panelShadowTex, panelX + soff, panelY - soff, panelW, panelH);
         batch.draw(panelTex, panelX, panelY, panelW, panelH);
 
-        glyph.setText(pauseFont, "Пауза");
-        drawShadowedText(pauseFont, "Пауза", w_world / 2 - glyph.width / 2, h_world * 0.72f);
+        float centerY = h_world / 2f;
+        glyph.setText(pauseFont, Intro.bundle.get("pause_title"));
+        drawShadowedText(pauseFont, Intro.bundle.get("pause_title"), w_world / 2 - glyph.width / 2, centerY + pauseFont.getLineHeight() * 3.3f + pauseShift, false);
 
         for (int i = 0; i < pauseOptions.length; i++) {
             glyph.setText(pauseFont, pauseOptions[i]);
-            drawShadowedText(pauseFont, pauseOptions[i], w_world / 2 - glyph.width / 2, optionY(i));
+            drawShadowedText(pauseFont, pauseOptions[i], w_world / 2 - glyph.width / 2, optionY(i), i == pressedPauseIndex);
         }
-        exitSprite.draw(batch);
         batch.end();
     }
 
     private float optionY(int i) {
-        float centerY = h_world * 0.61f;
+        float centerY = h_world / 2f + pauseFont.getLineHeight() * 1.5f + pauseShift;
         float spacing = pauseFont.getLineHeight() * 1.8f;
         return centerY - i * spacing;
     }
 
     private void handlePauseInput() {
-        if (!Gdx.input.justTouched()) return;
+        if (pausePressTimer > 0 || !Gdx.input.justTouched()) return;
         touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(touchPos);
 
@@ -410,21 +475,25 @@ public class LevelScreen extends Game implements ContactListener, Screen {
             float cy = optionY(i) - pauseFont.getLineHeight() / 2f;
             if (touchPos.x >= w_world / 2 - bandW / 2 && touchPos.x <= w_world / 2 + bandW / 2
                     && touchPos.y >= cy - bandH / 2 && touchPos.y <= cy + bandH / 2) {
-                if (i == 0) {                  // resume
-                    Intro.paused = false;
-                    Intro.consumeTouch = true;
-                } else if (i == 1) {           // restart (goToLevel resets paused + consumeTouch)
-                    intro.goToLevel(level);
-                } else {                       // levels — stay paused so Back returns to the pause menu
-                    intro.setScreen(new LevelSelectScreen(intro, this));
-                }
+                pressedPauseIndex = i;
+                pausePressTimer = 0.08f;
                 return;
             }
         }
+    }
 
-        if (touchPos.x >= exitSprite.getX() && touchPos.x <= exitSprite.getX() + exitSprite.getWidth()
-                && touchPos.y >= exitSprite.getY() && touchPos.y <= exitSprite.getY() + exitSprite.getHeight()) {
-            Gdx.app.exit();
+    private void executePauseAction() {
+        int i = pressedPauseIndex;
+        if (i == 0) {
+            Intro.paused = false;
+            Intro.consumeTouch = true;
+        } else if (i == 1) {
+            intro.goToLevel(level);
+        } else if (i == 2) {
+            intro.setScreen(new LevelSelectScreen(intro, this));
+        } else if (i == 3) {
+            Intro.paused = false;
+            intro.showMenu();
         }
     }
 
@@ -591,14 +660,18 @@ public class LevelScreen extends Game implements ContactListener, Screen {
         pauseFont.dispose();
         blackTex.dispose();
         pauseIconTex.dispose();
-        exitIconTex.dispose();
         shadowTex.dispose();
         panelTex.dispose();
+        panelShadowTex.dispose();
         if (hintRightTexA != null) {
             hintRightTexA.dispose();
             hintRightTexB.dispose();
             hintLeftTexA.dispose();
             hintLeftTexB.dispose();
+        }
+        if (accentPlatformTex != null) {
+            accentPlatformTex.dispose();
+            defaultPlatformTex.dispose();
         }
     }
 }

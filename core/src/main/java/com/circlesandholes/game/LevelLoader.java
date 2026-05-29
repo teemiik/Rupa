@@ -68,6 +68,21 @@ public final class LevelLoader {
                 data.barriers.add(bar);
             }
         }
+
+        JsonValue plat = root.get("rotatingPlatforms");
+        if (plat != null) {
+            for (JsonValue p = plat.child; p != null; p = p.next) {
+                LevelData.RotatingPlatform rp = new LevelData.RotatingPlatform();
+                rp.x = p.getFloat("x");
+                rp.y = p.getFloat("y");
+                rp.w = p.getFloat("w");
+                rp.h = p.getFloat("h");
+                rp.rotationSpeed = p.getFloat("rotationSpeed", 45f);
+                rp.color = p.getString("color", "default");
+                data.rotatingPlatforms.add(rp);
+            }
+        }
+
         return data;
     }
 }
