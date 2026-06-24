@@ -1,0 +1,89 @@
+name: Android
+
+# build runs on pushes to main and on PRs; deploy only on pushes to main.
+# A merged PR produces a push event on main, so this covers both of your cases.
+# https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref (keeps PR feedback fast).
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build release AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.4
+
+      - name: Compute version
+        # versionCode must strictly exceed the highest one already in the Play Store
+        # (currently 8). The offset keeps it monotonic across runs.
+        run: |
+          echo "VERSION_CODE=$((8 + ${GITHUB_RUN_NUMBER}))" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=1.0.$((7 + ${GITHUB_RUN_NUMBER}))" >> "$GITHUB_ENV"
+
+      # Secrets are unavailable on PRs (especially from forks). Only wire up the
+      # release keystore on pushes to main; on PRs the build falls back to the
+      # debug signing config (still exercises full release compilation + ProGuard).
+      - name: Decode signing keystore
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          printf '%s' "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build release AAB
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew android:bundleRelease --stacktrace
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: android-build-outputs
+          path: |
+            android/build/outputs/bundle/release/*.aab
+            android/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy to Google Play (internal)
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build outputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: android-build-outputs
+          path: outputs
+
+      - name: Deploy to Google Play (internal track)
+        # SHA-pinned for supply-chain safety (tag v1 -> v1.1.5). Dependabot bumps the SHA.
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.circlesandholes.game
+          releaseFiles: outputs/bundle/release/*.aab
+          mappingFile: outputs/mapping/release/mapping.txt
+          track: internal
+          status: completed
