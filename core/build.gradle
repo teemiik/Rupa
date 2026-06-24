@@ -38,4 +38,15 @@ dependencies {
   api "net.onedaybeard.artemis:artemis-odb:$artemisOdbVersion"
   api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
   api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"
+
+  testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+  testImplementation "org.mockito:mockito-core:4.11.0"
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "failed"
+    exceptionFormat "full"
+  }
 }
