@@ -33,6 +33,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.4
 
+      - name: Run unit tests
+        # Fail fast: don't build/package if core tests are red.
+        run: ./gradlew core:test
+
+      - name: SpotBugs (report-only)
+        # Static analysis of core. ignoreFailures=true in core/build.gradle, so this
+        # never breaks the build — the HTML/XML report is uploaded for review.
+        run: ./gradlew core:spotbugsMain
+
+      - name: Upload SpotBugs report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: spotbugs-report
+          path: core/build/reports/spotbugs/
+          if-no-files-found: ignore
+
       - name: Compute version
         # versionCode must strictly exceed the highest one already in the Play Store
         # (currently 8). The offset keeps it monotonic across runs.
