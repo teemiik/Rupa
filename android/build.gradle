@@ -30,8 +30,8 @@ android {
     applicationId 'com.circlesandholes.game'
     minSdkVersion 21
     targetSdkVersion 35
-    versionCode 8
-    versionName "1.0.7"
+    versionCode = (System.getenv("VERSION_CODE") ?: "8").toInteger()
+    versionName = System.getenv("VERSION_NAME") ?: "1.0.7"
     multiDexEnabled true
   }
   compileOptions {
@@ -39,8 +39,19 @@ android {
     targetCompatibility "8"
     coreLibraryDesugaringEnabled true
   }
+  signingConfigs {
+    release {
+      storeFile file(System.getenv("SIGNING_KEYSTORE_FILE") ?: "release.key")
+      storePassword System.getenv("SIGNING_STORE_PASSWORD") ?: ""
+      keyAlias System.getenv("SIGNING_KEY_ALIAS") ?: ""
+      keyPassword System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+    }
+  }
   buildTypes {
     release {
+      // Release keystore in CI (env-driven); fall back to debug signing locally so
+      // `android:assembleRelease` still builds without the signing secrets.
+      signingConfig System.getenv("SIGNING_KEYSTORE_FILE") != null ? signingConfigs.release : signingConfigs.debug
       minifyEnabled true
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
