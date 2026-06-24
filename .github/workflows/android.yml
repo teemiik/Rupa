@@ -1,11 +1,11 @@
 name: Android
 
-# build runs on pushes to main and on PRs; deploy only on pushes to main.
-# A merged PR produces a push event on main, so this covers both of your cases.
+# build runs on pushes to master and on PRs; deploy only on pushes to master.
+# A merged PR produces a push event on master, so this covers both of your cases.
 # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
 
 permissions:
@@ -41,10 +41,10 @@ jobs:
           echo "VERSION_NAME=1.0.$((7 + ${GITHUB_RUN_NUMBER}))" >> "$GITHUB_ENV"
 
       # Secrets are unavailable on PRs (especially from forks). Only wire up the
-      # release keystore on pushes to main; on PRs the build falls back to the
+      # release keystore on pushes to master; on PRs the build falls back to the
       # debug signing config (still exercises full release compilation + ProGuard).
       - name: Decode signing keystore
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           printf '%s' "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
           echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
@@ -68,7 +68,7 @@ jobs:
   deploy:
     name: Deploy to Google Play (internal)
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Download build outputs
