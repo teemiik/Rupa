@@ -1,0 +1,19 @@
+{
+  "board": "board_2",
+  "background": "background_2",
+  "showHints": true,
+  "holes": [
+    { "x": 0.5, "y": 0.3 },
+    { "x": 0.2, "y": 0.6 }
+  ],
+  "dynamicHoles": [
+    { "x": 0.4, "y": 0.5, "xDin": 1, "yDin": -1 }
+  ],
+  "dynamicControl": { "lowerX": 0.1, "upperX": 0.9, "inverted": true },
+  "barriers": [
+    { "x": 0.5, "y": 0.7, "w": 0.1, "h": 0.2, "rotation": 30 }
+  ],
+  "rotatingPlatforms": [
+    { "x": 0.5, "y": 0.4, "w": 0.2, "h": 0.05, "rotationSpeed": 90, "color": "red" }
+  ]
+}
