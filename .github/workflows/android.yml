@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build release AAB
+    name: Build release AAB + APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -66,12 +66,14 @@ jobs:
           printf '%s' "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
           echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
-      - name: Build release AAB
+      - name: Build release AAB + APK
         env:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        run: ./gradlew android:bundleRelease --stacktrace
+        # Single Gradle invocation: R8/minify runs once, both outputs are signed
+        # with the release keystore (debug fallback on PRs) for direct install.
+        run: ./gradlew android:bundleRelease android:assembleRelease --stacktrace
 
       - name: Upload build outputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -79,6 +81,7 @@ jobs:
           name: android-build-outputs
           path: |
             android/build/outputs/bundle/release/*.aab
+            android/build/outputs/apk/release/*.apk
             android/build/outputs/mapping/release/mapping.txt
           if-no-files-found: error
 
